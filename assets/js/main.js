@@ -149,7 +149,7 @@ function toggleFaq(btn) {
 
   start();
 })();
-  // == SUPABASE CATALOGO LOADER ==
+  // == SUPABASE CATALOGO LOADER (com variações) ==
   (function() {
     var SUPA_URL = "https://grmulciyoytzqlrdqmcg.supabase.co";
     var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdybXVsY2l5b3l0enFscmRxbWNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NTAyNzUsImV4cCI6MjA5NTEyNjI3NX0.pbkhq2_nHaCsqo8WbH-9TIaCgWAaWgDW2W5zBK9tl-Y";
@@ -182,15 +182,33 @@ function toggleFaq(btn) {
 
     function createWppSvg() {
       var div = document.createElement('span');
-      div.innerHTML = WPP_SVG; // SVG seguro (constante interna, nao vem do banco)
+      div.innerHTML = WPP_SVG;
       return div.firstChild;
     }
 
+    // ── Gerar preço para um produto ──
+    function buildPrice(p) {
+      var priceDiv = el('div', {className:'product-price'});
+      if (p.preco && p.preco_tipo !== "consulta") {
+        if (p.promo && p.promo_preco) {
+          priceDiv.appendChild(el('del', {textContent:'R$ ' + p.preco, style:'font-size:.8rem;color:var(--soft)'}));
+          priceDiv.appendChild(document.createElement('br'));
+        }
+        if (p.preco_tipo === "partir") priceDiv.appendChild(el('small', {textContent:'a partir de'}));
+        var pf = p.promo && p.promo_preco ? p.promo_preco : p.preco;
+        priceDiv.appendChild(document.createTextNode('R$ ' + pf));
+      } else {
+        priceDiv.appendChild(el('small', {textContent:'a partir de'}));
+        priceDiv.appendChild(document.createTextNode('Sob consulta'));
+      }
+      return priceDiv;
+    }
+
+    // ── Card simples (sem variação) ──
     function buildCard(p, catName, i) {
       var article = el('article', {className:'product-card reveal visible'});
       if (i > 0) article.style.transitionDelay = (i * 0.08).toFixed(2) + 's';
 
-      // Imagem
       var imgDiv = el('div', {className:'product-img'});
       if (p.foto_url) {
         imgDiv.appendChild(el('img', {src: p.foto_url, alt: p.nome || '', loading:'lazy'}));
@@ -206,39 +224,207 @@ function toggleFaq(btn) {
       }
       article.appendChild(imgDiv);
 
-      // Body
       var body = el('div', {className:'product-body'});
       body.appendChild(el('div', {className:'product-cat', textContent: catName}));
       body.appendChild(el('h3', {className:'product-name', textContent: p.nome || ''}));
       body.appendChild(el('p', {className:'product-desc', textContent: p.descricao || ''}));
 
-      // Preco
       var foot = el('div', {className:'product-foot'});
-      var priceDiv = el('div', {className:'product-price'});
-      if (p.preco && p.preco_tipo !== "consulta") {
-        if (p.promo && p.promo_preco) {
-          priceDiv.appendChild(el('del', {textContent:'R$ ' + p.preco, style:'font-size:.8rem;color:var(--soft)'}));
-          priceDiv.appendChild(document.createElement('br'));
-        }
-        if (p.preco_tipo === "partir") priceDiv.appendChild(el('small', {textContent:'a partir de'}));
-        var pf = p.promo && p.promo_preco ? p.promo_preco : p.preco;
-        priceDiv.appendChild(document.createTextNode('R$ ' + pf));
-      } else {
-        priceDiv.appendChild(el('small', {textContent:'a partir de'}));
-        priceDiv.appendChild(document.createTextNode('Sob consulta'));
-      }
-      foot.appendChild(priceDiv);
+      foot.appendChild(buildPrice(p));
 
-      // Botao WhatsApp
       var wMsg = encodeURIComponent(p.whatsapp_msg || "Olá! Vim pelo site da Studio MiMimos e gostaria de saber mais sobre *" + (p.nome||'') + "*. 😊");
       var wLink = "https://wa.me/" + WPP_NUM + "?text=" + wMsg;
       var btnTxt = p.preco_tipo === "consulta" ? "Orçamento" : "Pedir";
       var wppBtn = el('a', {href: wLink, className:'product-wpp', target:'_blank', rel:'noopener noreferrer'}, [createWppSvg(), document.createTextNode(' ' + btnTxt)]);
       foot.appendChild(wppBtn);
-
       body.appendChild(foot);
       article.appendChild(body);
       return article;
+    }
+
+    // ── Card com variações (carrossel + seletor) ──
+    function buildGroupCard(variants, catName, i) {
+      var article = el('article', {className:'product-card product-card--has-vars reveal visible'});
+      if (i > 0) article.style.transitionDelay = (i * 0.08).toFixed(2) + 's';
+
+      // ─ Carrossel de fotos (uma por variação) ─
+      var imgDiv = el('div', {className:'product-img product-img--carousel'});
+      var track = el('div', {className:'var-carousel-track'});
+      var dotsWrap = el('div', {className:'var-carousel-dots'});
+
+      variants.forEach(function(v, vi) {
+        var slide = el('div', {className:'var-slide' + (vi === 0 ? ' active' : '')});
+        if (v.foto_url) {
+          slide.appendChild(el('img', {src: v.foto_url, alt: v.nome || '', loading:'lazy'}));
+        } else {
+          slide.appendChild(el('div', {className:'product-img-ph'}, [el('span', {textContent:'foto em breve'})]));
+        }
+        track.appendChild(slide);
+
+        if (variants.length > 1) {
+          var dot = el('button', {className:'var-dot' + (vi === 0 ? ' active' : '')});
+          dot.setAttribute('aria-label', v.variacao_nome || v.nome || 'Foto ' + (vi+1));
+          dot.setAttribute('data-idx', vi);
+          dotsWrap.appendChild(dot);
+        }
+      });
+
+      imgDiv.appendChild(track);
+      if (variants.length > 1) imgDiv.appendChild(dotsWrap);
+
+      // Setas do carrossel
+      if (variants.length > 1) {
+        var prevBtn = el('button', {className:'var-arrow var-arrow--prev', 'aria-label':'Foto anterior'}, [document.createTextNode('\u2039')]);
+        var nextBtn = el('button', {className:'var-arrow var-arrow--next', 'aria-label':'Próxima foto'}, [document.createTextNode('\u203A')]);
+        imgDiv.appendChild(prevBtn);
+        imgDiv.appendChild(nextBtn);
+      }
+
+      // Badge do primeiro
+      var bc = BADGE_CLS[variants[0].badge] || "";
+      if (bc) imgDiv.appendChild(el('span', {className:'badge ' + bc, textContent: variants[0].badge}));
+
+      article.appendChild(imgDiv);
+
+      // ─ Body ─
+      var body = el('div', {className:'product-body'});
+      body.appendChild(el('div', {className:'product-cat', textContent: catName}));
+
+      // Nome (usa nome base do grupo, tirando o nome da variação)
+      var baseName = variants[0].nome || '';
+      var nameEl = el('h3', {className:'product-name', textContent: baseName});
+      body.appendChild(nameEl);
+
+      // ─ Seletor de variações ─
+      if (variants.length > 1) {
+        var varSelector = el('div', {className:'var-selector'});
+        variants.forEach(function(v, vi) {
+          var label = v.variacao_nome || v.nome || 'Opção ' + (vi+1);
+          var btn = el('button', {className:'var-btn' + (vi === 0 ? ' active' : ''), textContent: label});
+          btn.setAttribute('data-idx', vi);
+          varSelector.appendChild(btn);
+        });
+        body.appendChild(varSelector);
+      }
+
+      // Descrição (muda com a variação)
+      var descEl = el('p', {className:'product-desc', textContent: variants[0].descricao || ''});
+      body.appendChild(descEl);
+
+      // Footer (preço + botão WPP)
+      var foot = el('div', {className:'product-foot'});
+      var priceWrap = el('div', {className:'var-price-wrap'});
+      priceWrap.appendChild(buildPrice(variants[0]));
+      foot.appendChild(priceWrap);
+
+      var wMsg0 = encodeURIComponent(variants[0].whatsapp_msg || "Olá! Vim pelo site da Studio MiMimos e gostaria de saber mais sobre *" + (variants[0].nome||'') + "*. 😊");
+      var wLink0 = "https://wa.me/" + WPP_NUM + "?text=" + wMsg0;
+      var btnTxt0 = variants[0].preco_tipo === "consulta" ? "Orçamento" : "Pedir";
+      var wppBtn = el('a', {href: wLink0, className:'product-wpp', target:'_blank', rel:'noopener noreferrer'}, [createWppSvg(), document.createTextNode(' ' + btnTxt0)]);
+      foot.appendChild(wppBtn);
+      body.appendChild(foot);
+      article.appendChild(body);
+
+      // ─ Interatividade: trocar variação ─
+      var currentIdx = 0;
+
+      function goTo(idx) {
+        if (idx < 0) idx = variants.length - 1;
+        if (idx >= variants.length) idx = 0;
+        currentIdx = idx;
+        var v = variants[idx];
+
+        // Atualizar slides
+        track.querySelectorAll('.var-slide').forEach(function(s, si) {
+          s.classList.toggle('active', si === idx);
+        });
+
+        // Atualizar dots
+        dotsWrap.querySelectorAll('.var-dot').forEach(function(d, di) {
+          d.classList.toggle('active', di === idx);
+        });
+
+        // Atualizar botões de variação
+        article.querySelectorAll('.var-btn').forEach(function(b, bi) {
+          b.classList.toggle('active', bi === idx);
+        });
+
+        // Atualizar nome, descrição, preço, botão WPP
+        nameEl.textContent = v.nome || '';
+        descEl.textContent = v.descricao || '';
+
+        // Rebuild price
+        while (priceWrap.firstChild) priceWrap.removeChild(priceWrap.firstChild);
+        priceWrap.appendChild(buildPrice(v));
+
+        // Update WPP link
+        var wMsg = encodeURIComponent(v.whatsapp_msg || "Olá! Vim pelo site da Studio MiMimos e gostaria de saber mais sobre *" + (v.nome||'') + "*. 😊");
+        wppBtn.href = "https://wa.me/" + WPP_NUM + "?text=" + wMsg;
+        var newBtnTxt = v.preco_tipo === "consulta" ? "Orçamento" : "Pedir";
+        wppBtn.lastChild.textContent = ' ' + newBtnTxt;
+      }
+
+      // Event listeners
+      dotsWrap.addEventListener('click', function(e) {
+        var dot = e.target.closest('.var-dot');
+        if (dot) goTo(parseInt(dot.getAttribute('data-idx')));
+      });
+
+      var selectorEl = body.querySelector('.var-selector');
+      if (selectorEl) {
+        selectorEl.addEventListener('click', function(e) {
+          var btn = e.target.closest('.var-btn');
+          if (btn) goTo(parseInt(btn.getAttribute('data-idx')));
+        });
+      }
+
+      if (variants.length > 1) {
+        imgDiv.querySelector('.var-arrow--prev').addEventListener('click', function() { goTo(currentIdx - 1); });
+        imgDiv.querySelector('.var-arrow--next').addEventListener('click', function() { goTo(currentIdx + 1); });
+      }
+
+      // Touch swipe no carrossel
+      var touchStartX = 0;
+      track.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, {passive:true});
+      track.addEventListener('touchend', function(e) {
+        var diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) goTo(diff > 0 ? currentIdx + 1 : currentIdx - 1);
+      }, {passive:true});
+
+      return article;
+    }
+
+    // ── Agrupar produtos: por grupo ou solo ──
+    function groupProducts(prods) {
+      var grouped = [];
+      var grupoMap = {};
+      var solos = [];
+
+      prods.forEach(function(p) {
+        if (p.grupo) {
+          if (!grupoMap[p.grupo]) {
+            grupoMap[p.grupo] = [];
+          }
+          grupoMap[p.grupo].push(p);
+        } else {
+          solos.push(p);
+        }
+      });
+
+      // Manter a ordem: usar a posição do primeiro item de cada grupo
+      var seen = {};
+      prods.forEach(function(p) {
+        if (p.grupo) {
+          if (!seen[p.grupo]) {
+            seen[p.grupo] = true;
+            grouped.push({ type: 'group', variants: grupoMap[p.grupo] });
+          }
+        } else {
+          grouped.push({ type: 'solo', product: p });
+        }
+      });
+
+      return grouped;
     }
 
     function loadCatalog() {
@@ -261,8 +447,14 @@ function toggleFaq(btn) {
           var prods = cats[catName];
           if (!prods || !prods.length) return;
           while (sec.firstChild) sec.removeChild(sec.firstChild);
-          prods.forEach(function(p, i) {
-            sec.appendChild(buildCard(p, catName, i));
+
+          var items = groupProducts(prods);
+          items.forEach(function(item, i) {
+            if (item.type === 'group') {
+              sec.appendChild(buildGroupCard(item.variants, catName, i));
+            } else {
+              sec.appendChild(buildCard(item.product, catName, i));
+            }
           });
         });
       })
