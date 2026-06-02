@@ -163,7 +163,34 @@ function toggleFaq(btn) {
       "Presentes & Cestas": "cat-cestas",
       "Empresas & Datas": "cat-empresas"
     };
-    var BADGE_CLS = {"Novo":"badge-novo","Personaliz\u00e1vel":"badge-pers","Mais pedido":"badge-hot","Sob consulta":"badge-consul"};
+    var BADGE_CLS = {}; // será preenchido dinamicamente
+    var BADGE_STYLES = {}; // { nome: { cor_texto, cor_fundo } }
+
+    // Fallback para badges antigos caso a tabela não exista ainda
+    var BADGE_FALLBACK = {
+      "Novo": { cor_fundo: "#fff8ee", cor_texto: "#92400e" },
+      "Personalizável": { cor_fundo: "#f3effe", cor_texto: "#6b21a8" },
+      "Mais pedido": { cor_fundo: "#fef2f2", cor_texto: "#dc2626" },
+      "Sob consulta": { cor_fundo: "#f5f5f2", cor_texto: "#4b5563" }
+    };
+
+    function loadBadges() {
+      return fetch(SUPA_URL + "/rest/v1/badges?select=*&status=eq.Ativo&order=ordem.asc", {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.length) {
+          data.forEach(function(b) {
+            BADGE_STYLES[b.nome] = { cor_fundo: b.cor_fundo, cor_texto: b.cor_texto };
+          });
+        }
+      })
+      .catch(function() {
+        // Se a tabela não existe, usa fallback
+        BADGE_STYLES = BADGE_FALLBACK;
+      });
+    }
 
     // Funcao segura para criar elementos sem innerHTML (previne XSS)
     function el(tag, attrs, children) {
@@ -204,19 +231,102 @@ function toggleFaq(btn) {
       return priceDiv;
     }
 
+    // ── Helper: pegar todas as fotos de um produto ──
+    function getPhotos(p) {
+      var photos = [];
+      if (p.foto_url) photos.push(p.foto_url);
+      var extras = p.fotos_extras || [];
+      if (typeof extras === 'string') { try { extras = JSON.parse(extras); } catch(e) { extras = []; } }
+      if (extras && extras.length) {
+        extras.forEach(function(url) { if (url) photos.push(url); });
+      }
+      return photos;
+    }
+
+    // ── Helper: criar carrossel ou imagem simples ──
+    function buildImgArea(photos, altText) {
+      var imgDiv = el('div', {className:'product-img'});
+
+      if (!photos.length) {
+        imgDiv.appendChild(el('div', {className:'product-img-ph'}, [el('span', {textContent:'foto em breve'})]));
+        return { imgDiv: imgDiv, goTo: null };
+      }
+
+      if (photos.length === 1) {
+        imgDiv.appendChild(el('img', {src: photos[0], alt: altText || '', loading:'lazy'}));
+        return { imgDiv: imgDiv, goTo: null };
+      }
+
+      // Carrossel
+      imgDiv.classList.add('product-img--carousel');
+      var track = el('div', {className:'var-carousel-track'});
+      var dotsWrap = el('div', {className:'var-carousel-dots'});
+      var currentIdx = 0;
+
+      photos.forEach(function(src, si) {
+        var slide = el('div', {className:'var-slide' + (si === 0 ? ' active' : '')});
+        slide.appendChild(el('img', {src: src, alt: (altText || '') + ' — foto ' + (si+1), loading:'lazy'}));
+        track.appendChild(slide);
+
+        var dot = el('button', {className:'var-dot' + (si === 0 ? ' active' : '')});
+        dot.setAttribute('aria-label', 'Foto ' + (si+1));
+        dot.setAttribute('data-idx', si);
+        dotsWrap.appendChild(dot);
+      });
+
+      imgDiv.appendChild(track);
+      imgDiv.appendChild(dotsWrap);
+
+      var prevBtn = el('button', {className:'var-arrow var-arrow--prev', 'aria-label':'Foto anterior'}, [document.createTextNode('\u2039')]);
+      var nextBtn = el('button', {className:'var-arrow var-arrow--next', 'aria-label':'Próxima foto'}, [document.createTextNode('\u203A')]);
+      imgDiv.appendChild(prevBtn);
+      imgDiv.appendChild(nextBtn);
+
+      function goTo(idx) {
+        if (idx < 0) idx = photos.length - 1;
+        if (idx >= photos.length) idx = 0;
+        currentIdx = idx;
+        track.querySelectorAll('.var-slide').forEach(function(s, si) { s.classList.toggle('active', si === idx); });
+        dotsWrap.querySelectorAll('.var-dot').forEach(function(d, di) { d.classList.toggle('active', di === idx); });
+      }
+
+      dotsWrap.addEventListener('click', function(e) {
+        var dot = e.target.closest('.var-dot');
+        if (dot) goTo(parseInt(dot.getAttribute('data-idx')));
+      });
+      prevBtn.addEventListener('click', function() { goTo(currentIdx - 1); });
+      nextBtn.addEventListener('click', function() { goTo(currentIdx + 1); });
+
+      // Touch swipe
+      var touchStartX = 0;
+      track.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, {passive:true});
+      track.addEventListener('touchend', function(e) {
+        var diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) goTo(diff > 0 ? currentIdx + 1 : currentIdx - 1);
+      }, {passive:true});
+
+      return { imgDiv: imgDiv, goTo: goTo };
+    }
+
     // ── Card simples (sem variação) ──
     function buildCard(p, catName, i) {
       var article = el('article', {className:'product-card reveal visible'});
       if (i > 0) article.style.transitionDelay = (i * 0.08).toFixed(2) + 's';
 
-      var imgDiv = el('div', {className:'product-img'});
-      if (p.foto_url) {
-        imgDiv.appendChild(el('img', {src: p.foto_url, alt: p.nome || '', loading:'lazy'}));
-      } else {
-        imgDiv.appendChild(el('div', {className:'product-img-ph'}, [el('span', {textContent:'foto em breve'})]));
-      }
+      var photos = getPhotos(p);
+      var imgArea = buildImgArea(photos, p.nome || '');
+      var imgDiv = imgArea.imgDiv;
+
       var bc = BADGE_CLS[p.badge] || "";
-      if (bc) imgDiv.appendChild(el('span', {className:'badge ' + bc, textContent: p.badge}));
+      if (p.badge && p.badge !== "Nenhum") {
+        var bs = BADGE_STYLES[p.badge] || BADGE_FALLBACK[p.badge];
+        if (bs) {
+          var bdgEl = el('span', {className:'badge', textContent: p.badge});
+          bdgEl.style.background = bs.cor_fundo;
+          bdgEl.style.color = bs.cor_texto;
+          imgDiv.appendChild(bdgEl);
+        }
+      }
       if (p.promo && p.promo_texto) {
         var promoSpan = el('span', {className:'badge badge-novo', textContent: p.promo_texto});
         promoSpan.style.top = '44px';
@@ -281,8 +391,15 @@ function toggleFaq(btn) {
       }
 
       // Badge do primeiro
-      var bc = BADGE_CLS[variants[0].badge] || "";
-      if (bc) imgDiv.appendChild(el('span', {className:'badge ' + bc, textContent: variants[0].badge}));
+      if (variants[0].badge && variants[0].badge !== "Nenhum") {
+        var bs2 = BADGE_STYLES[variants[0].badge] || BADGE_FALLBACK[variants[0].badge];
+        if (bs2) {
+          var bdgEl2 = el('span', {className:'badge', textContent: variants[0].badge});
+          bdgEl2.style.background = bs2.cor_fundo;
+          bdgEl2.style.color = bs2.cor_texto;
+          imgDiv.appendChild(bdgEl2);
+        }
+      }
 
       article.appendChild(imgDiv);
 
@@ -461,8 +578,12 @@ function toggleFaq(btn) {
       .catch(function(e) { console.error("Erro ao carregar catalogo:", e); });
     }
 
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadCatalog);
-    else loadCatalog();
+    function initCatalog() {
+      loadBadges().then(loadCatalog);
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCatalog);
+    else initCatalog();
   })();
 // ══ FORMULÁRIO DE ORÇAMENTO → WHATSAPP ══════════════
 var _orcLock = false;
