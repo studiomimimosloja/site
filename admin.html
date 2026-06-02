@@ -174,6 +174,7 @@ tr:hover td{background:var(--bg)}
     <button class="ni" onclick="showP('gal',this)">🖼️ Galeria</button>
     <button class="ni" onclick="showP('faqs',this)">❓ FAQ</button>
     <button class="ni" onclick="showP('banners',this)">🎯 Banners</button>
+    <button class="ni" onclick="showP('badges',this)">🏷️ Badges</button>
     <button class="ni" onclick="showP('cal',this)">📅 Calendário</button>
     <button class="ni" onclick="showP('config',this)">⚙️ Config</button>
   </nav>
@@ -305,6 +306,14 @@ tr:hover td{background:var(--bg)}
     <div class="tb"><div class="tb-l"></div><button class="ba" onclick="openModal('banners')">+ Novo banner</button></div>
     <div class="tw"><table><thead><tr><th>Título</th><th>Texto botão</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead><tbody id="banners-tbody"></tbody></table></div>
   </div>
+
+  <!-- BADGES -->
+  <div id="panel-badges" style="display:none">
+    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:18px">🏷️ Badges <span id="badges-cnt" style="font-size:.85rem;color:var(--sf);font-weight:400"></span></h2>
+    <p style="font-size:.82rem;color:var(--sf);margin-bottom:16px">Crie etiquetas personalizadas para seus produtos. A cor de fundo e texto são aplicadas automaticamente no site.</p>
+    <div class="tb"><div class="tb-l"></div><button class="ba" onclick="openModal('badges')">+ Novo badge</button></div>
+    <div class="tw"><table><thead><tr><th>Preview</th><th>Nome</th><th>Cores</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead><tbody id="badges-tbody"></tbody></table></div>
+  </div>
 </main>
 </div>
 
@@ -322,6 +331,13 @@ tr:hover td{background:var(--bg)}
           <div id="fui"><div style="font-size:1.5rem;margin-bottom:6px">&#128247;</div><p style="font-size:.8rem;color:var(--sf)">Clique para selecionar</p></div>
           <input type="file" id="finp" accept="image/*" onchange="handleF(this)" style="display:none">
         </div>
+      </div>
+      <!-- FOTOS EXTRAS (carrossel) -->
+      <div class="fi fw">
+        <label class="fl">Fotos extras (carrossel) <span style="font-weight:400;color:var(--sf)">— opcional</span></label>
+        <div id="fotos-extras-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+        <button type="button" class="ba" style="font-size:.78rem;padding:6px 14px" onclick="document.getElementById('fextra-inp').click()">+ Adicionar foto</button>
+        <input type="file" id="fextra-inp" accept="image/jpeg,image/png,image/webp" onchange="handleExtraFoto(this)" style="display:none" multiple>
       </div>
       <div class="fi fw"><label class="fl">Nome do produto *</label><input class="fx" id="fn" placeholder="Ex: Caixa Milk Personalizada"></div>
       <div class="fi"><label class="fl">Categoria *</label><select class="fx" id="fcat"><option value="">Selecione...</option><option>Impressão 3D</option><option>Lembrancinhas</option><option>Mimos Personalizados</option><option>Presentes & Cestas</option><option>Empresas & Datas</option></select></div>
