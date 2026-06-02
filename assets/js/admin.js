@@ -147,12 +147,13 @@ function render() {
   if (!list.length) { tb.innerHTML = '<tr><td colspan="5"><div class="es"><span>&#128270;</span>Nenhum produto encontrado</div></td></tr>'; return; }
   tb.innerHTML = list.map(function(p) {
     var foto = p.foto_url ? '<img class="pt" src="' + esc(p.foto_url) + '" loading="lazy">' : '<div class="ptp">&#127873;</div>';
+    var varLabel = p.grupo ? '<div style="font-size:.65rem;color:var(--t);font-weight:600;margin-top:1px">&#128279; ' + esc(p.grupo) + (p.variacao_nome ? ' · ' + esc(p.variacao_nome) : '') + '</div>' : '';
     var bc = BC[p.badge] || "";
     var bdg = bc ? '<span class="bp ' + bc + '">' + esc(p.badge) + '</span>' : '<span style="color:var(--sf)">\u2014</span>';
     var stc = p.status === "Ativo" ? "sp-a" : p.status === "Oculto" ? "sp-o" : "sp-e";
     var dc = p.status === "Ativo" ? "sd-a" : p.status === "Oculto" ? "sd-o" : "sd-e";
     var prm = p.promo && p.promo_preco ? '<div style="font-size:.7rem;color:var(--a);font-weight:600">&#127991; R$ ' + esc(p.promo_preco) + '</div>' : '';
-    return '<tr><td><div class="pi">' + foto + '<div><div class="pn">' + esc(p.nome) + '</div><div class="pc">' + esc(p.categoria||"") + '</div></div></div></td>'
+    return '<tr><td><div class="pi">' + foto + '<div><div class="pn">' + esc(p.nome) + '</div><div class="pc">' + esc(p.categoria||"") + '</div>' + varLabel + '</div></div></td>'
       + '<td>' + precoLbl(p) + prm + '</td><td>' + bdg + '</td>'
       + '<td><span class="sp ' + stc + '"><span class="sd ' + dc + '"></span>' + p.status + '</span></td>'
       + '<td><div class="ac">'
@@ -169,7 +170,7 @@ function openM() {
   fotoB64 = ""; fotoFile = null;
   document.getElementById("fprev").style.display = "none";
   document.getElementById("fui").style.display = "block";
-  ["fn","fcat","fbdg","fpr","fpt","fd","fwpp","fsts","ford","fpp","fptx"].forEach(function(id) {
+  ["fn","fcat","fbdg","fpr","fpt","fd","fwpp","fsts","ford","fpp","fptx","fgrupo","fvar"].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = "";
   });
   document.getElementById("fbdg").value = "Nenhum";
@@ -205,6 +206,8 @@ function editP(id) {
   document.getElementById("fwpp").value = p.whatsapp_msg || "";
   document.getElementById("fsts").value = p.status || "Ativo";
   document.getElementById("ford").value = p.ordem || 0;
+  document.getElementById("fgrupo").value = p.grupo || "";
+  document.getElementById("fvar").value = p.variacao_nome || "";
   document.getElementById("fpc").checked = p.promo || false;
   document.getElementById("fpp").value = p.promo_preco || "";
   document.getElementById("fptx").value = p.promo_texto || "";
@@ -278,6 +281,8 @@ function saveP() {
       foto_url: fotoUrl,
       status: document.getElementById("fsts").value,
       ordem: parseInt(document.getElementById("ford").value) || 0,
+      grupo: document.getElementById("fgrupo").value.trim() || null,
+      variacao_nome: document.getElementById("fvar").value.trim() || null,
       promo: promo,
       promo_preco: promo ? document.getElementById("fpp").value.trim() : "",
       promo_texto: promo ? document.getElementById("fptx").value.trim() : ""
