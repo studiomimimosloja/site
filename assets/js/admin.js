@@ -180,6 +180,8 @@ function openM() {
   document.getElementById("fpc").checked = false;
   document.getElementById("pflds").classList.remove("sh");
   document.getElementById("eid").value = "";
+  extraFotos = [];
+  renderExtraFotos();
   document.getElementById("mt").textContent = "Novo produto";
   document.getElementById("mo").classList.add("op");
 }
@@ -213,6 +215,12 @@ function editP(id) {
   document.getElementById("fptx").value = p.promo_texto || "";
   if (p.promo) document.getElementById("pflds").classList.add("sh");
   else document.getElementById("pflds").classList.remove("sh");
+  // Carregar fotos extras
+  extraFotos = [];
+  var extras = p.fotos_extras || [];
+  if (typeof extras === 'string') { try { extras = JSON.parse(extras); } catch(e) { extras = []; } }
+  extras.forEach(function(url) { extraFotos.push({ url: url, file: null, isNew: false }); });
+  renderExtraFotos();
   document.getElementById("eid").value = id;
   document.getElementById("mt").textContent = "Editar produto";
   document.getElementById("mo").classList.add("op");
@@ -221,6 +229,9 @@ function editP(id) {
 function closeM() { document.getElementById("mo").classList.remove("op"); }
 
 var fotoFile = null;
+var extraFotos = []; // [{url:'...', file: File|null, isNew: bool}]
+var extraUploadQueue = [];
+
 function handleF(input) {
   var file = input.files[0];
   if (!file) return;
@@ -259,6 +270,80 @@ function uploadFoto() {
   });
 }
 
+// ── FOTOS EXTRAS (carrossel) ──
+function handleExtraFoto(input) {
+  var files = input.files;
+  if (!files || !files.length) return;
+  var allowed = ['image/jpeg','image/png','image/webp'];
+  for (var i = 0; i < files.length; i++) {
+    var f = files[i];
+    if (f.size > 5*1024*1024) { toast("Foto '" + f.name + "' muito grande (max 5MB)","err"); continue; }
+    if (allowed.indexOf(f.type) < 0) { toast("Formato inválido: " + f.name,"err"); continue; }
+    (function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        extraFotos.push({ url: e.target.result, file: file, isNew: true });
+        renderExtraFotos();
+      };
+      reader.readAsDataURL(file);
+    })(f);
+  }
+  input.value = "";
+}
+
+function renderExtraFotos() {
+  var grid = document.getElementById("fotos-extras-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  extraFotos.forEach(function(foto, idx) {
+    var div = document.createElement("div");
+    div.style.cssText = "position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1.5px solid var(--ln);";
+    var img = document.createElement("img");
+    img.src = foto.url;
+    img.alt = "Extra " + (idx+1);
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;";
+    div.appendChild(img);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "×";
+    btn.style.cssText = "position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(220,38,38,.85);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;";
+    btn.onclick = function() { removeExtraFoto(idx); };
+    div.appendChild(btn);
+    grid.appendChild(div);
+  });
+}
+
+function removeExtraFoto(idx) {
+  extraFotos.splice(idx, 1);
+  renderExtraFotos();
+}
+
+function uploadExtraFotos() {
+  var toUpload = extraFotos.filter(function(f) { return f.isNew && f.file; });
+  if (!toUpload.length) {
+    return Promise.resolve(extraFotos.map(function(f) { return f.url; }));
+  }
+  var promises = extraFotos.map(function(foto) {
+    if (!foto.isNew || !foto.file) return Promise.resolve(foto.url);
+    var ext = foto.file.name.split(".").pop().toLowerCase();
+    var fileName = "extra_" + Date.now() + "_" + Math.random().toString(36).substring(2,6) + "." + ext;
+    return fetch(SUPA_URL + "/storage/v1/object/produtos/" + fileName, {
+      method: "POST",
+      headers: {
+        "apikey": SUPA_KEY,
+        "Authorization": "Bearer " + (sessionToken || SUPA_KEY),
+        "Content-Type": foto.file.type || "image/jpeg",
+        "x-upsert": "true"
+      },
+      body: foto.file
+    }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t){ throw new Error(t); });
+      return SUPA_URL + "/storage/v1/object/public/produtos/" + fileName;
+    });
+  });
+  return Promise.all(promises);
+}
+
 function saveP() {
   var nome = document.getElementById("fn").value.trim();
   var cat = document.getElementById("fcat").value;
@@ -269,7 +354,9 @@ function saveP() {
   var svBtn = document.querySelector(".bsv");
   svBtn.textContent = "Salvando...";
   svBtn.disabled = true;
-  uploadFoto().then(function(fotoUrl) {
+  Promise.all([uploadFoto(), uploadExtraFotos()]).then(function(results) {
+    var fotoUrl = results[0];
+    var extrasUrls = results[1] || [];
     var obj = {
       nome: nome,
       categoria: cat,
@@ -279,6 +366,7 @@ function saveP() {
       badge: document.getElementById("fbdg").value,
       whatsapp_msg: document.getElementById("fwpp").value.trim(),
       foto_url: fotoUrl,
+      fotos_extras: extrasUrls,
       status: document.getElementById("fsts").value,
       ordem: parseInt(document.getElementById("ford").value) || 0,
       grupo: document.getElementById("fgrupo").value.trim() || null,
@@ -352,7 +440,7 @@ function toast(msg, type) {
 // CRUD GENÉRICO PARA NOVAS TABELAS
 // ════════════════════════════════════════════════════
 
-var genericData = { cats: [], deps: [], gal: [], faqs: [], banners: [] };
+var genericData = { cats: [], deps: [], gal: [], faqs: [], banners: [], badges: [] };
 var currentSection = "";
 var currentEditId = "";
 var genFotoFile = null;
@@ -365,7 +453,8 @@ var TABLES = {
   deps: { table: "depoimentos", label: "Depoimento", order: "created_at.desc" },
   gal:  { table: "galeria", label: "Foto", order: "ordem.asc,created_at.desc" },
   faqs: { table: "faq", label: "Pergunta", order: "ordem.asc" },
-  banners: { table: "banners", label: "Banner", order: "ordem.asc" }
+  banners: { table: "banners", label: "Banner", order: "ordem.asc" },
+  badges: { table: "badges", label: "Badge", order: "ordem.asc" }
 };
 
 function loadGeneric(section) {
@@ -376,7 +465,23 @@ function loadGeneric(section) {
     renderGeneric(section);
     var cnt = document.getElementById(section + "-cnt");
     if (cnt) cnt.textContent = "(" + (data||[]).length + ")";
+    if (section === "badges") refreshBadgeDropdown();
   }).catch(function(e) { toast("Erro ao carregar " + cfg.label + ": " + e.message, "err"); });
+}
+
+function refreshBadgeDropdown() {
+  var sel = document.getElementById("fbdg");
+  if (!sel) return;
+  var current = sel.value;
+  sel.innerHTML = '<option value="Nenhum">Nenhum</option>';
+  var badges = (genericData.badges || []).filter(function(b) { return b.status === 'Ativo'; });
+  badges.forEach(function(b) {
+    var opt = document.createElement('option');
+    opt.value = b.nome;
+    opt.textContent = b.nome;
+    sel.appendChild(opt);
+  });
+  sel.value = current || 'Nenhum';
 }
 
 function loadAllSections() {
@@ -429,6 +534,11 @@ function renderGeneric(section) {
     }
     if (section === "banners") {
       return '<tr><td><strong>' + esc(item.titulo||'—') + '</strong></td><td>' + esc(item.texto_botao||'—') + '</td><td>' + (item.ordem||0) + '</td><td>' + st + '</td><td>' + actions + '</td></tr>';
+    }
+    if (section === "badges") {
+      var preview = '<span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:.72rem;font-weight:600;background:' + esc(item.cor_fundo||'#eee') + ';color:' + esc(item.cor_texto||'#333') + '">' + esc(item.nome) + '</span>';
+      var cores = '<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:16px;border-radius:4px;display:inline-block;border:1px solid var(--ln);background:' + esc(item.cor_fundo||'') + '" title="Fundo"></span><span style="width:16px;height:16px;border-radius:4px;display:inline-block;border:1px solid var(--ln);background:' + esc(item.cor_texto||'') + '" title="Texto"></span></span>';
+      return '<tr><td>' + preview + '</td><td><strong>' + esc(item.nome) + '</strong></td><td>' + cores + '</td><td>' + (item.ordem||0) + '</td><td>' + st + '</td><td>' + actions + '</td></tr>';
     }
     return '';
   });
@@ -484,6 +594,13 @@ var FORM_FIELDS = {
     { id: 'g-btnlink', label: 'Link do botão', type: 'text', field: 'link_botao' },
     { id: 'g-ordem', label: 'Ordem', type: 'number', field: 'ordem', def: '0' },
     { id: 'g-status', label: 'Status', type: 'select', field: 'status', opts: ['Ativo','Oculto'], def: 'Ativo' }
+  ],
+  badges: [
+    { id: 'g-nome', label: 'Nome do badge *', type: 'text', field: 'nome', required: true },
+    { id: 'g-corfundo', label: 'Cor de fundo', type: 'color', field: 'cor_fundo', def: '#fff8ee' },
+    { id: 'g-cortexto', label: 'Cor do texto', type: 'color', field: 'cor_texto', def: '#92400e' },
+    { id: 'g-ordem', label: 'Ordem', type: 'number', field: 'ordem', def: '0' },
+    { id: 'g-status', label: 'Status', type: 'select', field: 'status', opts: ['Ativo','Oculto'], def: 'Ativo' }
   ]
 };
 
@@ -524,6 +641,8 @@ function openModal(section, editId) {
     } else if (f.type === 'checkbox') {
       var chk = val ? ' checked' : '';
       html += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="' + f.id + '"' + chk + ' style="width:18px;height:18px;accent-color:var(--t)"> Sim</label>';
+    } else if (f.type === 'color') {
+      html += '<div style="display:flex;align-items:center;gap:10px"><input type="color" id="' + f.id + '" value="' + esc(val+'') + '" style="width:48px;height:36px;border:1.5px solid var(--ln);border-radius:8px;cursor:pointer;padding:2px"><input type="text" id="' + f.id + '-hex" class="fx" value="' + esc(val+'') + '" style="width:100px;font-size:.8rem" oninput="document.getElementById(\'' + f.id + '\').value=this.value" onchange="document.getElementById(\'' + f.id + '\').value=this.value"><span class="bp" id="' + f.id + '-preview" style="background:' + esc(val+'') + ';color:' + (f.field === 'cor_fundo' ? '#333' : '#fff') + '">Preview</span></div>';
     } else if (f.type === 'file') {
       var prevSrc = val ? val : '';
       html += '<div class="fu" onclick="document.getElementById(\'' + f.id + '-inp\').click()">';
@@ -602,6 +721,7 @@ function saveGeneric() {
     var val;
     if (f.type === 'checkbox') val = el.checked;
     else if (f.type === 'number') val = parseInt(el.value) || 0;
+    else if (f.type === 'color') val = (el.value || '').trim();
     else val = (el.value || '').trim();
 
     if (f.required && !val) { toast("Preencha: " + f.label.replace(' *',''), "err"); hasError = true; }
