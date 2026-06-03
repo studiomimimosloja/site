@@ -1,3 +1,64 @@
+/* ══ SUBCATEGORIAS ════════════════════════════════ */
+
+/* Quando tem subcategorias, o cat-section vira flex column */
+.cat-section:has(.subcat-filter) {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.subcat-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.subcat-btn {
+  padding: 6px 18px;
+  border-radius: 100px;
+  border: 1.5px solid #e5e7eb;
+  background: #fafaf8;
+  color: #4b5563;
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+}
+
+.subcat-btn:hover {
+  border-color: #2ECFC4;
+  color: #1a1a2e;
+  background: #e6faf9;
+}
+
+.subcat-btn.active {
+  background: #1a1a2e;
+  color: white;
+  border-color: #1a1a2e;
+  font-weight: 600;
+}
+
+.subcat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .subcat-btn {
+    padding: 5px 14px;
+    font-size: .76rem;
+  }
+  
+  .subcat-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 /* ══ VARIAÇÕES DE PRODUTOS ═══════════════════════ */
 
 /* Carrossel de fotos da variação */
