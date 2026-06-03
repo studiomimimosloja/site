@@ -1,9 +1,10 @@
 /* ══ SUBCATEGORIAS ════════════════════════════════ */
 
-/* Quando tem subcategorias, o cat-section vira flex column */
-.cat-section:has(.subcat-filter) {
+/* Quando tem subcategorias, cat-section vira flex column */
+.cat-section.has-subcats {
   display: flex !important;
   flex-direction: column;
+  gap: 0;
 }
 
 .subcat-filter {
@@ -40,14 +41,28 @@
   font-weight: 600;
 }
 
+/* Grid que replica o layout original do catálogo */
 .subcat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   width: 100%;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1024px) {
+  .subcat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .subcat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
   .subcat-btn {
     padding: 5px 14px;
     font-size: .76rem;
