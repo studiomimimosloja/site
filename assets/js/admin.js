@@ -170,7 +170,7 @@ function openM() {
   fotoB64 = ""; fotoFile = null;
   document.getElementById("fprev").style.display = "none";
   document.getElementById("fui").style.display = "block";
-  ["fn","fcat","fbdg","fpr","fpt","fd","fwpp","fsts","ford","fpp","fptx","fgrupo","fvar"].forEach(function(id) {
+  ["fn","fcat","fsubcat","fbdg","fpr","fpt","fd","fwpp","fsts","ford","fpp","fptx","fgrupo","fvar"].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = "";
   });
   document.getElementById("fbdg").value = "Nenhum";
@@ -201,6 +201,7 @@ function editP(id) {
   }
   document.getElementById("fn").value = p.nome || "";
   document.getElementById("fcat").value = p.categoria || "";
+  document.getElementById("fsubcat").value = p.subcategoria || "";
   document.getElementById("fbdg").value = p.badge || "Nenhum";
   document.getElementById("fpr").value = p.preco || "";
   document.getElementById("fpt").value = p.preco_tipo || "fixo";
@@ -360,6 +361,7 @@ function saveP() {
     var obj = {
       nome: nome,
       categoria: cat,
+      subcategoria: document.getElementById("fsubcat").value.trim() || null,
       descricao: desc,
       preco: document.getElementById("fpr").value.trim(),
       preco_tipo: document.getElementById("fpt").value,
