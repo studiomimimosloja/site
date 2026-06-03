@@ -565,14 +565,69 @@ function toggleFaq(btn) {
           if (!prods || !prods.length) return;
           while (sec.firstChild) sec.removeChild(sec.firstChild);
 
-          var items = groupProducts(prods);
-          items.forEach(function(item, i) {
-            if (item.type === 'group') {
-              sec.appendChild(buildGroupCard(item.variants, catName, i));
-            } else {
-              sec.appendChild(buildCard(item.product, catName, i));
+          // Coletar subcategorias únicas
+          var subcats = [];
+          prods.forEach(function(p) {
+            if (p.subcategoria && subcats.indexOf(p.subcategoria) < 0) {
+              subcats.push(p.subcategoria);
             }
           });
+
+          // Criar filtros de subcategoria se existirem
+          var filterBar = null;
+          if (subcats.length > 0) {
+            filterBar = el('div', {className:'subcat-filter'});
+            var allBtn = el('button', {className:'subcat-btn active', textContent:'Todos'});
+            allBtn.setAttribute('data-sub', '');
+            filterBar.appendChild(allBtn);
+            subcats.forEach(function(sc) {
+              var btn = el('button', {className:'subcat-btn', textContent: sc});
+              btn.setAttribute('data-sub', sc);
+              filterBar.appendChild(btn);
+            });
+            sec.appendChild(filterBar);
+          }
+
+          // Grid de produtos
+          var grid = el('div', {className:'subcat-grid'});
+          var items = groupProducts(prods);
+          items.forEach(function(item, i) {
+            var card;
+            if (item.type === 'group') {
+              card = buildGroupCard(item.variants, catName, i);
+              // Pegar subcategoria do primeiro item do grupo
+              var subVal = item.variants[0].subcategoria || '';
+              card.setAttribute('data-sub', subVal);
+            } else {
+              card = buildCard(item.product, catName, i);
+              card.setAttribute('data-sub', item.product.subcategoria || '');
+            }
+            grid.appendChild(card);
+          });
+          sec.appendChild(grid);
+
+          // Interatividade dos filtros
+          if (filterBar) {
+            filterBar.addEventListener('click', function(e) {
+              var btn = e.target.closest('.subcat-btn');
+              if (!btn) return;
+              var sub = btn.getAttribute('data-sub');
+
+              // Ativar botão
+              filterBar.querySelectorAll('.subcat-btn').forEach(function(b) {
+                b.classList.toggle('active', b === btn);
+              });
+
+              // Filtrar cards
+              grid.querySelectorAll('.product-card').forEach(function(card) {
+                if (!sub || card.getAttribute('data-sub') === sub) {
+                  card.style.display = '';
+                } else {
+                  card.style.display = 'none';
+                }
+              });
+            });
+          }
         });
       })
       .catch(function(e) { console.error("Erro ao carregar catalogo:", e); });
