@@ -573,10 +573,14 @@ function toggleFaq(btn) {
             }
           });
 
-          // Criar filtros de subcategoria se existirem
-          var filterBar = null;
-          if (subcats.length > 0) {
-            filterBar = el('div', {className:'subcat-filter'});
+          var hasSubcats = subcats.length > 0;
+          var items = groupProducts(prods);
+
+          if (hasSubcats) {
+            // Com subcategorias: filtros + grid wrapper
+            sec.classList.add('has-subcats');
+
+            var filterBar = el('div', {className:'subcat-filter'});
             var allBtn = el('button', {className:'subcat-btn active', textContent:'Todos'});
             allBtn.setAttribute('data-sub', '');
             filterBar.appendChild(allBtn);
@@ -586,46 +590,42 @@ function toggleFaq(btn) {
               filterBar.appendChild(btn);
             });
             sec.appendChild(filterBar);
-          }
 
-          // Grid de produtos
-          var grid = el('div', {className:'subcat-grid'});
-          var items = groupProducts(prods);
-          items.forEach(function(item, i) {
-            var card;
-            if (item.type === 'group') {
-              card = buildGroupCard(item.variants, catName, i);
-              // Pegar subcategoria do primeiro item do grupo
-              var subVal = item.variants[0].subcategoria || '';
-              card.setAttribute('data-sub', subVal);
-            } else {
-              card = buildCard(item.product, catName, i);
-              card.setAttribute('data-sub', item.product.subcategoria || '');
-            }
-            grid.appendChild(card);
-          });
-          sec.appendChild(grid);
+            var grid = el('div', {className:'subcat-grid'});
+            items.forEach(function(item, i) {
+              var card;
+              if (item.type === 'group') {
+                card = buildGroupCard(item.variants, catName, i);
+                card.setAttribute('data-sub', item.variants[0].subcategoria || '');
+              } else {
+                card = buildCard(item.product, catName, i);
+                card.setAttribute('data-sub', item.product.subcategoria || '');
+              }
+              grid.appendChild(card);
+            });
+            sec.appendChild(grid);
 
-          // Interatividade dos filtros
-          if (filterBar) {
+            // Interatividade dos filtros
             filterBar.addEventListener('click', function(e) {
               var btn = e.target.closest('.subcat-btn');
               if (!btn) return;
               var sub = btn.getAttribute('data-sub');
-
-              // Ativar botão
               filterBar.querySelectorAll('.subcat-btn').forEach(function(b) {
                 b.classList.toggle('active', b === btn);
               });
-
-              // Filtrar cards
               grid.querySelectorAll('.product-card').forEach(function(card) {
-                if (!sub || card.getAttribute('data-sub') === sub) {
-                  card.style.display = '';
-                } else {
-                  card.style.display = 'none';
-                }
+                card.style.display = (!sub || card.getAttribute('data-sub') === sub) ? '' : 'none';
               });
+            });
+
+          } else {
+            // Sem subcategorias: produtos direto na seção (layout original)
+            items.forEach(function(item, i) {
+              if (item.type === 'group') {
+                sec.appendChild(buildGroupCard(item.variants, catName, i));
+              } else {
+                sec.appendChild(buildCard(item.product, catName, i));
+              }
             });
           }
         });
