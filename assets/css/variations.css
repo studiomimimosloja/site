@@ -1,7 +1,7 @@
 /* ══ SUBCATEGORIAS ════════════════════════════════ */
 
-/* Quando tem subcategorias, cat-section vira flex column */
-.cat-section.has-subcats {
+/* Quando tem subcategorias E está ativa, cat-section vira flex column */
+.cat-section.has-subcats.active {
   display: flex !important;
   flex-direction: column;
   gap: 0;
