@@ -498,8 +498,12 @@ function toggleFaq(btn) {
           var sec = document.getElementById(secId);
           if (!sec) return;
           var prods = cats[catName];
-          if (!prods || !prods.length) return;
           while (sec.firstChild) sec.removeChild(sec.firstChild);
+          if (!prods || !prods.length) {
+            sec.appendChild(el('div', {className:'cat-empty', textContent:'Em breve novos produtos nesta categoria.'}));
+            sec.querySelector('.cat-empty').style.cssText = 'text-align:center;padding:40px;color:#999;font-size:.9rem';
+            return;
+          }
 
           // Coletar subcategorias únicas
           var subcats = [];
