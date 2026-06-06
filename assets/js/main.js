@@ -111,7 +111,7 @@ function toggleFaq(btn) {
     };
 
     function loadBadges() {
-      return fetch(SUPA_URL + "/rest/v1/badges?select=*&status=eq.Ativo&order=ordem.asc&_t=" + Date.now(), {
+      return fetch(SUPA_URL + "/rest/v1/badges?select=*&status=eq.Ativo&order=ordem.asc", {
         headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
       })
       .then(function(r) { return r.json(); })
@@ -481,7 +481,7 @@ function toggleFaq(btn) {
     }
 
     function loadCatalog() {
-      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&order=ordem.asc,created_at.desc&_t=" + Date.now(), {
+      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&order=ordem.asc,created_at.desc", {
         headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
       })
       .then(function(r) { return r.json(); })
@@ -578,7 +578,7 @@ function toggleFaq(btn) {
 
     // ── Destaques: produtos em promo ou com badge "Novo" ──
     function loadDestaques() {
-      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&or=(promo.eq.true,badge.eq.Novo)&order=ordem.asc&limit=4&_t=" + Date.now(), {
+      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&or=(promo.eq.true,badge.eq.Novo)&order=ordem.asc&limit=4", {
         headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
       })
       .then(function(r) { return r.json(); })
