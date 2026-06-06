@@ -84,71 +84,7 @@ function toggleFaq(btn) {
   }
 }
 
-// ── Hero Carousel ──────────────────────────────
-(function() {
-  var images = [
-    "assets/img/hero-14.jpg",
-        "assets/img/img-15.jpg",
-        "assets/img/img-16.jpg",
-        "assets/img/img-17.jpg",
-        "assets/img/img-18.jpg"
-  ];
-  var idx = 0;
-  var timer = null;
-  var track = document.getElementById('hero-track');
-  var dots  = document.getElementById('hero-dots');
-
-  if (!track || !dots || images.length === 0) return;
-
-  images.forEach(function(src, i) {
-    var slide = document.createElement('div');
-    slide.className = 'slide';
-    slide.setAttribute('role','listitem');
-    var img = document.createElement('img');
-    img.src = src;
-    img.alt = 'Portfólio Studio MiMimos — foto ' + (i+1);
-    img.loading = i === 0 ? 'eager' : 'lazy';
-    slide.appendChild(img);
-    track.appendChild(slide);
-
-    var dot = document.createElement('button');
-    dot.setAttribute('aria-label', 'Ver foto ' + (i+1));
-    dot.setAttribute('role','tab');
-    dot.className = i === 0 ? 'active' : '';
-    dot.onclick = function() { go(i); };
-    dots.appendChild(dot);
-  });
-
-  function updateDots() {
-    var dts = dots.querySelectorAll('button');
-    dts.forEach(function(d, i) {
-      d.classList.toggle('active', i === idx);
-    });
-  }
-
-  function go(n) {
-    idx = (n + images.length) % images.length;
-    track.style.transform = 'translateX(-' + (idx * 100) + '%)';
-    updateDots();
-    reset();
-  }
-
-  function start() { timer = setInterval(function() { go(idx + 1); }, 4200); }
-  function reset() { clearInterval(timer); start(); }
-
-  document.getElementById('hero-prev').onclick = function() { go(idx - 1); };
-  document.getElementById('hero-next').onclick = function() { go(idx + 1); };
-
-  // touch support
-  var startX = 0;
-  track.addEventListener('touchstart', function(e) { startX = e.touches[0].clientX; }, {passive:true});
-  track.addEventListener('touchend', function(e) {
-    var diff = startX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 40) go(diff > 0 ? idx + 1 : idx - 1);
-  }, {passive:true});
-
-  start();
-})();
+// ── Hero carousel removido (hero redesenhado) ──;
   // == SUPABASE CATALOGO LOADER (com variações) ==
   (function() {
     var SUPA_URL = "https://grmulciyoytzqlrdqmcg.supabase.co";
@@ -175,8 +111,8 @@ function toggleFaq(btn) {
     };
 
     function loadBadges() {
-      return fetch(SUPA_URL + "/rest/v1/badges?select=*&status=eq.Ativo&order=ordem.asc", {
-        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY }
+      return fetch(SUPA_URL + "/rest/v1/badges?select=*&status=eq.Ativo&order=ordem.asc&_t=" + Date.now(), {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -545,8 +481,8 @@ function toggleFaq(btn) {
     }
 
     function loadCatalog() {
-      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&order=ordem.asc,created_at.desc", {
-        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY }
+      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&order=ordem.asc,created_at.desc&_t=" + Date.now(), {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -634,7 +570,33 @@ function toggleFaq(btn) {
     }
 
     function initCatalog() {
-      loadBadges().then(loadCatalog);
+      loadBadges().then(function() {
+        loadCatalog();
+        loadDestaques();
+      });
+    }
+
+    // ── Destaques: produtos em promo ou com badge "Novo" ──
+    function loadDestaques() {
+      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&or=(promo.eq.true,badge.eq.Novo)&order=ordem.asc&limit=4&_t=" + Date.now(), {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var grid = document.getElementById('destaques-grid');
+        if (!grid || !data || !data.length) {
+          // Esconder seção se não tem destaques
+          var sec = document.querySelector('.destaques-section');
+          if (sec) sec.style.display = 'none';
+          return;
+        }
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+        data.forEach(function(p, i) {
+          var catName = p.categoria || '';
+          grid.appendChild(buildCard(p, catName, i));
+        });
+      })
+      .catch(function(e) { console.error("Erro ao carregar destaques:", e); });
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCatalog);
