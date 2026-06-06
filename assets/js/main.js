@@ -283,6 +283,13 @@ function toggleFaq(btn) {
       var btnTxt = p.preco_tipo === "consulta" ? "Orçamento" : "Pedir";
       var wppBtn = el('a', {href: wLink, className:'product-wpp', target:'_blank', rel:'noopener noreferrer'}, [createWppSvg(), document.createTextNode(' ' + btnTxt)]);
       foot.appendChild(wppBtn);
+
+      // Botão Adicionar à lista
+      var precoTxt = (p.preco && p.preco_tipo !== "consulta") ? 'R$ ' + (p.promo && p.promo_preco ? p.promo_preco : p.preco) : 'Sob consulta';
+      var wlBtn = el('button', {className:'wl-add-btn' + (isInWishlist(p.nome) ? ' wl-added' : ''), textContent: isInWishlist(p.nome) ? '✓ Adicionado' : '+ Adicionar'});
+      wlBtn.setAttribute('data-wl-nome', p.nome || '');
+      wlBtn.addEventListener('click', function() { addToWishlist(p.nome, precoTxt, catName); });
+      foot.appendChild(wlBtn);
       body.appendChild(foot);
       article.appendChild(body);
       return article;
@@ -656,38 +663,105 @@ function toggleFaq(btn) {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCatalog);
     else initCatalog();
   })();
-// ══ FORMULÁRIO DE ORÇAMENTO → WHATSAPP ══════════════
-var _orcLock = false;
-function enviarOrcamento() {
-  if (_orcLock) return;
-  _orcLock = true;
-  setTimeout(function() { _orcLock = false; }, 3000);
-  var nome = document.getElementById('orc-nome').value.trim();
-  var wpp = document.getElementById('orc-wpp').value.trim();
-  var produto = document.getElementById('orc-produto').value;
-  var tema = document.getElementById('orc-tema').value.trim();
-  var qtd = document.getElementById('orc-qtd').value.trim();
-  var data = document.getElementById('orc-data').value;
-  var obs = document.getElementById('orc-obs').value.trim();
+// ══ LISTA DE DESEJOS (Wishlist) ══════════════════
+var wishlist = [];
 
-  if (!nome) { alert('Por favor, informe seu nome.'); document.getElementById('orc-nome').focus(); return; }
-  if (!produto) { alert('Por favor, selecione o tipo de produto.'); document.getElementById('orc-produto').focus(); return; }
-
-  var dataFormatada = '';
-  if (data) {
-    var d = new Date(data + 'T00:00:00');
-    dataFormatada = d.toLocaleDateString('pt-BR');
+function addToWishlist(nome, preco, categoria) {
+  var exists = wishlist.some(function(item) { return item.nome === nome; });
+  if (exists) {
+    removeFromWishlist(nome);
+    return;
   }
+  wishlist.push({ nome: nome, preco: preco || 'Sob consulta', categoria: categoria || '' });
+  updateWishlistUI();
+  // Feedback visual
+  var floatBtn = document.getElementById('wl-float');
+  if (floatBtn) { floatBtn.classList.add('wl-pulse'); setTimeout(function() { floatBtn.classList.remove('wl-pulse'); }, 400); }
+}
 
-  var msg = 'Olá, Studio MiMimos! Quero fazer um orçamento. 😊\n\n';
-  msg += '👤 *Nome:* ' + nome + '\n';
-  if (wpp) msg += '📱 *WhatsApp:* ' + wpp + '\n';
-  msg += '🎁 *Produto:* ' + produto + '\n';
-  if (tema) msg += '🎨 *Tema:* ' + tema + '\n';
-  if (qtd) msg += '🔢 *Quantidade:* ' + qtd + '\n';
-  if (dataFormatada) msg += '📅 *Data do evento:* ' + dataFormatada + '\n';
-  if (obs) msg += '📝 *Observações:* ' + obs + '\n';
+function removeFromWishlist(nome) {
+  wishlist = wishlist.filter(function(item) { return item.nome !== nome; });
+  updateWishlistUI();
+}
 
+function isInWishlist(nome) {
+  return wishlist.some(function(item) { return item.nome === nome; });
+}
+
+function updateWishlistUI() {
+  var count = wishlist.length;
+  var floatBtn = document.getElementById('wl-float');
+  var countEl = document.getElementById('wl-count');
+  var itemsEl = document.getElementById('wl-items');
+  var footerEl = document.getElementById('wl-footer');
+
+  // Botão flutuante
+  if (floatBtn) floatBtn.style.display = count > 0 ? 'flex' : 'none';
+  if (countEl) countEl.textContent = count;
+
+  // Atualizar botões nos cards
+  document.querySelectorAll('.wl-add-btn').forEach(function(btn) {
+    var nome = btn.getAttribute('data-wl-nome');
+    if (isInWishlist(nome)) {
+      btn.classList.add('wl-added');
+      btn.textContent = '✓ Adicionado';
+    } else {
+      btn.classList.remove('wl-added');
+      btn.textContent = '+ Adicionar';
+    }
+  });
+
+  // Painel
+  if (!itemsEl) return;
+  itemsEl.innerHTML = '';
+  if (count === 0) {
+    itemsEl.innerHTML = '<p class="wl-empty">Nenhum produto adicionado ainda.<br>Navegue pelo catálogo e clique em "Adicionar" nos produtos que deseja.</p>';
+    if (footerEl) footerEl.style.display = 'none';
+    return;
+  }
+  if (footerEl) footerEl.style.display = 'block';
+
+  wishlist.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'wl-item';
+    var info = document.createElement('div');
+    info.className = 'wl-item-info';
+    var nameEl = document.createElement('div');
+    nameEl.className = 'wl-item-name';
+    nameEl.textContent = item.nome;
+    info.appendChild(nameEl);
+    var priceEl = document.createElement('div');
+    priceEl.className = 'wl-item-price';
+    priceEl.textContent = item.preco;
+    info.appendChild(priceEl);
+    div.appendChild(info);
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'wl-item-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.setAttribute('aria-label', 'Remover ' + item.nome);
+    removeBtn.onclick = function() { removeFromWishlist(item.nome); };
+    div.appendChild(removeBtn);
+    itemsEl.appendChild(div);
+  });
+}
+
+function toggleWishlist() {
+  var panel = document.getElementById('wishlist-panel');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'flex';
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+
+function enviarLista() {
+  if (!wishlist.length) return;
+  var msg = 'Olá, Studio MiMimos! 😊\n\nVim pelo site e gostaria de combinar o pedido desses produtos:\n\n';
+  wishlist.forEach(function(item, i) {
+    msg += '• *' + item.nome + '*';
+    if (item.preco && item.preco !== 'Sob consulta') msg += ' — ' + item.preco;
+    msg += '\n';
+  });
+  msg += '\nPode me ajudar com valores, personalização e prazo? 🙏';
   var url = 'https://wa.me/5585997327204?text=' + encodeURIComponent(msg);
   window.open(url, '_blank');
 }
