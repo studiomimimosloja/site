@@ -110,23 +110,6 @@ function toggleFaq(btn) {
       "Sob consulta": { cor_fundo: "#f5f5f2", cor_texto: "#4b5563" }
     };
 
-    function loadBadges() {
-      return fetch(SUPA_URL + "/rest/v1/badges?select=*&status=eq.Ativo&order=ordem.asc", {
-        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data && data.length) {
-          data.forEach(function(b) {
-            BADGE_STYLES[b.nome] = { cor_fundo: b.cor_fundo, cor_texto: b.cor_texto };
-          });
-        }
-      })
-      .catch(function() {
-        // Se a tabela não existe, usa fallback
-        BADGE_STYLES = BADGE_FALLBACK;
-      });
-    }
 
     // Funcao segura para criar elementos sem innerHTML (previne XSS)
     function el(tag, attrs, children) {
@@ -487,177 +470,164 @@ function toggleFaq(btn) {
       return grouped;
     }
 
-    function loadCatalog() {
-      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&order=ordem.asc,created_at.desc", {
-        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data || !data.length) return;
-        var cats = {};
-        data.forEach(function(p) {
-          var c = p.categoria || "Outros";
-          if (!cats[c]) cats[c] = [];
-          cats[c].push(p);
-        });
-        Object.keys(CAT_IDS).forEach(function(catName) {
-          var secId = CAT_IDS[catName];
-          var sec = document.getElementById(secId);
-          if (!sec) return;
-          var prods = cats[catName];
-          while (sec.firstChild) sec.removeChild(sec.firstChild);
-          if (!prods || !prods.length) {
-            sec.appendChild(el('div', {className:'cat-empty', textContent:'Em breve novos produtos nesta categoria.'}));
-            sec.querySelector('.cat-empty').style.cssText = 'text-align:center;padding:40px;color:#999;font-size:.9rem';
-            return;
-          }
-
-          // Coletar subcategorias únicas
-          var subcats = [];
-          prods.forEach(function(p) {
-            if (p.subcategoria && subcats.indexOf(p.subcategoria) < 0) {
-              subcats.push(p.subcategoria);
-            }
-          });
-
-          var hasSubcats = subcats.length > 0;
-          var items = groupProducts(prods);
-
-          if (hasSubcats) {
-            // Com subcategorias: filtros + grid wrapper
-            sec.classList.add('has-subcats');
-
-            var filterBar = el('div', {className:'subcat-filter'});
-            var allBtn = el('button', {className:'subcat-btn active', textContent:'Todos'});
-            allBtn.setAttribute('data-sub', '');
-            filterBar.appendChild(allBtn);
-            subcats.forEach(function(sc) {
-              var btn = el('button', {className:'subcat-btn', textContent: sc});
-              btn.setAttribute('data-sub', sc);
-              filterBar.appendChild(btn);
-            });
-            sec.appendChild(filterBar);
-
-            var grid = el('div', {className:'subcat-grid'});
-            items.forEach(function(item, i) {
-              var card;
-              if (item.type === 'group') {
-                card = buildGroupCard(item.variants, catName, i);
-                card.setAttribute('data-sub', item.variants[0].subcategoria || '');
-              } else {
-                card = buildCard(item.product, catName, i);
-                card.setAttribute('data-sub', item.product.subcategoria || '');
-              }
-              grid.appendChild(card);
-            });
-            sec.appendChild(grid);
-
-            // Interatividade dos filtros
-            filterBar.addEventListener('click', function(e) {
-              var btn = e.target.closest('.subcat-btn');
-              if (!btn) return;
-              var sub = btn.getAttribute('data-sub');
-              filterBar.querySelectorAll('.subcat-btn').forEach(function(b) {
-                b.classList.toggle('active', b === btn);
-              });
-              grid.querySelectorAll('.product-card').forEach(function(card) {
-                card.style.display = (!sub || card.getAttribute('data-sub') === sub) ? '' : 'none';
-              });
-            });
-
-          } else {
-            // Sem subcategorias: produtos direto na seção (layout original)
-            items.forEach(function(item, i) {
-              if (item.type === 'group') {
-                sec.appendChild(buildGroupCard(item.variants, catName, i));
-              } else {
-                sec.appendChild(buildCard(item.product, catName, i));
-              }
-            });
-          }
-        });
-      })
-      .catch(function(e) { console.error("Erro ao carregar catalogo:", e); });
-    }
 
     function initCatalog() {
-      loadBadges().then(function() {
-        loadCatalog();
-        loadDestaques();
-        loadDepoimentos();
+      // Carregar TUDO em paralelo (não sequencial)
+      var badgesReq = fetch(SUPA_URL + "/rest/v1/badges?select=*&status=eq.Ativo&order=ordem.asc", {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
+      }).then(function(r) { return r.json(); }).catch(function() { return []; });
+
+      var produtosReq = fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&order=ordem.asc,created_at.desc", {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
+      }).then(function(r) { return r.json(); }).catch(function() { return []; });
+
+      var depsReq = fetch(SUPA_URL + "/rest/v1/depoimentos?select=*&status=eq.Ativo&order=created_at.desc&limit=6", {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
+      }).then(function(r) { return r.json(); }).catch(function() { return []; });
+
+      Promise.all([badgesReq, produtosReq, depsReq]).then(function(results) {
+        var badgesData = results[0] || [];
+        var produtosData = results[1] || [];
+        var depsData = results[2] || [];
+
+        // Processar badges
+        if (badgesData.length) {
+          badgesData.forEach(function(b) {
+            BADGE_STYLES[b.nome] = { cor_fundo: b.cor_fundo, cor_texto: b.cor_texto };
+          });
+        } else {
+          BADGE_STYLES = BADGE_FALLBACK;
+        }
+
+        // Renderizar catálogo
+        renderCatalog(produtosData);
+
+        // Renderizar destaques
+        renderDestaques(produtosData);
+
+        // Renderizar depoimentos
+        renderDepoimentos(depsData);
       });
     }
 
-    // ── Depoimentos dinâmicos ──
-    function loadDepoimentos() {
-      fetch(SUPA_URL + "/rest/v1/depoimentos?select=*&status=eq.Ativo&order=created_at.desc&limit=6", {
-        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var grid = document.getElementById('dep-grid');
-        if (!grid) return;
-        while (grid.firstChild) grid.removeChild(grid.firstChild);
-
-        if (!data || !data.length) {
-          var emptyMsg = el('div', {textContent:'Depoimentos em breve.'});
-          emptyMsg.style.cssText = 'text-align:center;padding:40px;color:#999;font-size:.9rem;grid-column:1/-1';
-          grid.appendChild(emptyMsg);
+    function renderCatalog(data) {
+      if (!data || !data.length) return;
+      var cats = {};
+      data.forEach(function(p) {
+        var c = p.categoria || "Outros";
+        if (!cats[c]) cats[c] = [];
+        cats[c].push(p);
+      });
+      Object.keys(CAT_IDS).forEach(function(catName) {
+        var secId = CAT_IDS[catName];
+        var sec = document.getElementById(secId);
+        if (!sec) return;
+        var prods = cats[catName];
+        while (sec.firstChild) sec.removeChild(sec.firstChild);
+        if (!prods || !prods.length) {
+          sec.appendChild(el('div', {className:'cat-empty', textContent:'Em breve novos produtos nesta categoria.'}));
+          sec.querySelector('.cat-empty').style.cssText = 'text-align:center;padding:40px;color:#999;font-size:.9rem';
           return;
         }
 
-        var colors = ['av-teal', 'av-purple', 'av-amber'];
-        data.forEach(function(d, i) {
-          var card = el('div', {className:'testimonial-card reveal visible'});
-          if (i > 0) card.style.transitionDelay = (i * 0.08).toFixed(2) + 's';
-
-          card.appendChild(el('div', {className:'testimonial-quote', textContent:'"'}));
-
-          var nota = parseInt(d.nota) || 5;
-          var stars = '';
-          for (var s = 0; s < nota; s++) stars += '★';
-          card.appendChild(el('div', {className:'testimonial-stars', textContent: stars}));
-
-          card.appendChild(el('p', {className:'testimonial-text', textContent: d.texto || ''}));
-
-          var author = el('div', {className:'testimonial-author'});
-          var nome = d.ocultar_nome ? (d.nome_cliente ? d.nome_cliente.charAt(0) + '***' : 'Cliente') : (d.nome_cliente || 'Cliente');
-          var inicial = (d.nome_cliente || 'C').charAt(0).toUpperCase();
-          author.appendChild(el('div', {className:'author-avatar ' + colors[i % 3], textContent: inicial}));
-
-          var info = el('div', {});
-          info.appendChild(el('div', {className:'author-name', textContent: nome}));
-          if (d.tipo_pedido) info.appendChild(el('div', {className:'author-info', textContent: d.tipo_pedido}));
-          author.appendChild(info);
-
-          card.appendChild(author);
-          grid.appendChild(card);
+        var subcats = [];
+        prods.forEach(function(p) {
+          if (p.subcategoria && subcats.indexOf(p.subcategoria) < 0) subcats.push(p.subcategoria);
         });
-      })
-      .catch(function(e) { console.error("Erro ao carregar depoimentos:", e); });
+
+        var hasSubcats = subcats.length > 0;
+        var items = groupProducts(prods);
+
+        if (hasSubcats) {
+          sec.classList.add('has-subcats');
+          var filterBar = el('div', {className:'subcat-filter'});
+          var allBtn = el('button', {className:'subcat-btn active', textContent:'Todos'});
+          allBtn.setAttribute('data-sub', '');
+          filterBar.appendChild(allBtn);
+          subcats.forEach(function(sc) {
+            var btn = el('button', {className:'subcat-btn', textContent: sc});
+            btn.setAttribute('data-sub', sc);
+            filterBar.appendChild(btn);
+          });
+          sec.appendChild(filterBar);
+
+          var grid = el('div', {className:'subcat-grid'});
+          items.forEach(function(item, i) {
+            var card;
+            if (item.type === 'group') {
+              card = buildGroupCard(item.variants, catName, i);
+              card.setAttribute('data-sub', item.variants[0].subcategoria || '');
+            } else {
+              card = buildCard(item.product, catName, i);
+              card.setAttribute('data-sub', item.product.subcategoria || '');
+            }
+            grid.appendChild(card);
+          });
+          sec.appendChild(grid);
+
+          filterBar.addEventListener('click', function(e) {
+            var btn = e.target.closest('.subcat-btn');
+            if (!btn) return;
+            var sub = btn.getAttribute('data-sub');
+            filterBar.querySelectorAll('.subcat-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+            grid.querySelectorAll('.product-card').forEach(function(card) {
+              card.style.display = (!sub || card.getAttribute('data-sub') === sub) ? '' : 'none';
+            });
+          });
+        } else {
+          items.forEach(function(item, i) {
+            if (item.type === 'group') sec.appendChild(buildGroupCard(item.variants, catName, i));
+            else sec.appendChild(buildCard(item.product, catName, i));
+          });
+        }
+      });
     }
 
-    // ── Destaques: produtos em promo ou com badge "Novo" ──
-    function loadDestaques() {
-      fetch(SUPA_URL + "/rest/v1/produtos?select=*&status=eq.Ativo&or=(promo.eq.true,badge.eq.Novo)&order=ordem.asc&limit=4", {
-        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var grid = document.getElementById('destaques-grid');
-        if (!grid || !data || !data.length) {
-          // Esconder seção se não tem destaques
-          var sec = document.querySelector('.destaques-section');
-          if (sec) sec.style.display = 'none';
-          return;
-        }
-        while (grid.firstChild) grid.removeChild(grid.firstChild);
-        data.forEach(function(p, i) {
-          var catName = p.categoria || '';
-          grid.appendChild(buildCard(p, catName, i));
-        });
-      })
-      .catch(function(e) { console.error("Erro ao carregar destaques:", e); });
+    function renderDestaques(data) {
+      var grid = document.getElementById('destaques-grid');
+      if (!grid) return;
+      var destaques = (data || []).filter(function(p) { return p.promo || p.badge === 'Novo'; }).slice(0, 4);
+      if (!destaques.length) {
+        var sec = document.querySelector('.destaques-section');
+        if (sec) sec.style.display = 'none';
+        return;
+      }
+      while (grid.firstChild) grid.removeChild(grid.firstChild);
+      destaques.forEach(function(p, i) { grid.appendChild(buildCard(p, p.categoria || '', i)); });
+    }
+
+    function renderDepoimentos(data) {
+      var grid = document.getElementById('dep-grid');
+      if (!grid) return;
+      while (grid.firstChild) grid.removeChild(grid.firstChild);
+      if (!data || !data.length) {
+        var emptyMsg = document.createElement('div');
+        emptyMsg.textContent = 'Depoimentos em breve.';
+        emptyMsg.style.cssText = 'text-align:center;padding:40px;color:#999;font-size:.9rem;grid-column:1/-1';
+        grid.appendChild(emptyMsg);
+        return;
+      }
+      var colors = ['av-teal', 'av-purple', 'av-amber'];
+      data.forEach(function(d, i) {
+        var card = el('div', {className:'testimonial-card reveal visible'});
+        if (i > 0) card.style.transitionDelay = (i * 0.08).toFixed(2) + 's';
+        card.appendChild(el('div', {className:'testimonial-quote', textContent:'"'}));
+        var nota = parseInt(d.nota) || 5;
+        var stars = '';
+        for (var s = 0; s < nota; s++) stars += String.fromCharCode(9733);
+        card.appendChild(el('div', {className:'testimonial-stars', textContent: stars}));
+        card.appendChild(el('p', {className:'testimonial-text', textContent: d.texto || ''}));
+        var author = el('div', {className:'testimonial-author'});
+        var nome = d.ocultar_nome ? (d.nome_cliente ? d.nome_cliente.charAt(0) + '***' : 'Cliente') : (d.nome_cliente || 'Cliente');
+        var inicial = (d.nome_cliente || 'C').charAt(0).toUpperCase();
+        author.appendChild(el('div', {className:'author-avatar ' + colors[i % 3], textContent: inicial}));
+        var info = el('div', {});
+        info.appendChild(el('div', {className:'author-name', textContent: nome}));
+        if (d.tipo_pedido) info.appendChild(el('div', {className:'author-info', textContent: d.tipo_pedido}));
+        author.appendChild(info);
+        card.appendChild(author);
+        grid.appendChild(card);
+      });
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCatalog);
@@ -755,13 +725,13 @@ function toggleWishlist() {
 
 function enviarLista() {
   if (!wishlist.length) return;
-  var msg = 'Olá, Studio MiMimos! 😊\n\nVim pelo site e gostaria de combinar o pedido desses produtos:\n\n';
+  var msg = 'Olá, Studio MiMimos!\n\nVim pelo site e gostaria de combinar o pedido desses produtos:\n\n';
   wishlist.forEach(function(item, i) {
     msg += '• *' + item.nome + '*';
     if (item.preco && item.preco !== 'Sob consulta') msg += ' — ' + item.preco;
     msg += '\n';
   });
-  msg += '\nPode me ajudar com valores, personalização e prazo? 🙏';
+  msg += '\nPode me ajudar com valores, personalização e prazo?';
   var url = 'https://wa.me/5585997327204?text=' + encodeURIComponent(msg);
   window.open(url, '_blank');
 }
