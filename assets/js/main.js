@@ -577,7 +577,57 @@ function toggleFaq(btn) {
       loadBadges().then(function() {
         loadCatalog();
         loadDestaques();
+        loadDepoimentos();
       });
+    }
+
+    // ── Depoimentos dinâmicos ──
+    function loadDepoimentos() {
+      fetch(SUPA_URL + "/rest/v1/depoimentos?select=*&status=eq.Ativo&order=created_at.desc&limit=6", {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var grid = document.getElementById('dep-grid');
+        if (!grid) return;
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+        if (!data || !data.length) {
+          var emptyMsg = el('div', {textContent:'Depoimentos em breve.'});
+          emptyMsg.style.cssText = 'text-align:center;padding:40px;color:#999;font-size:.9rem;grid-column:1/-1';
+          grid.appendChild(emptyMsg);
+          return;
+        }
+
+        var colors = ['av-teal', 'av-purple', 'av-amber'];
+        data.forEach(function(d, i) {
+          var card = el('div', {className:'testimonial-card reveal visible'});
+          if (i > 0) card.style.transitionDelay = (i * 0.08).toFixed(2) + 's';
+
+          card.appendChild(el('div', {className:'testimonial-quote', textContent:'"'}));
+
+          var nota = parseInt(d.nota) || 5;
+          var stars = '';
+          for (var s = 0; s < nota; s++) stars += '★';
+          card.appendChild(el('div', {className:'testimonial-stars', textContent: stars}));
+
+          card.appendChild(el('p', {className:'testimonial-text', textContent: d.texto || ''}));
+
+          var author = el('div', {className:'testimonial-author'});
+          var nome = d.ocultar_nome ? (d.nome_cliente ? d.nome_cliente.charAt(0) + '***' : 'Cliente') : (d.nome_cliente || 'Cliente');
+          var inicial = (d.nome_cliente || 'C').charAt(0).toUpperCase();
+          author.appendChild(el('div', {className:'author-avatar ' + colors[i % 3], textContent: inicial}));
+
+          var info = el('div', {});
+          info.appendChild(el('div', {className:'author-name', textContent: nome}));
+          if (d.tipo_pedido) info.appendChild(el('div', {className:'author-info', textContent: d.tipo_pedido}));
+          author.appendChild(info);
+
+          card.appendChild(author);
+          grid.appendChild(card);
+        });
+      })
+      .catch(function(e) { console.error("Erro ao carregar depoimentos:", e); });
     }
 
     // ── Destaques: produtos em promo ou com badge "Novo" ──
