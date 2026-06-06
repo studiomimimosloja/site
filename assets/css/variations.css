@@ -76,6 +76,17 @@
   margin-bottom: 36px;
 }
 
+.hero-v2-actions .btn-outline {
+  color: white;
+  border-color: rgba(255,255,255,.4);
+  background: transparent;
+}
+
+.hero-v2-actions .btn-outline:hover {
+  border-color: white;
+  background: rgba(255,255,255,.1);
+}
+
 .hero-v2-stats {
   display: flex;
   gap: 40px;
