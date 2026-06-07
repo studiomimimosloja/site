@@ -1196,3 +1196,74 @@ function erpKpi(rotulo, valor, nota, alerta) {
     if (id === "erp") { loadERP(); }
   };
 })();
+
+// ============================================================
+// PEDIDOS — quadro por status (usa o mesmo login/token do admin)
+// ============================================================
+var PED_FLUXO = ["novo","orcamento_enviado","aprovado","producao","pronto","entregue"];
+var PED_LABEL = {
+  novo:"🆕 Novo", orcamento_enviado:"📄 Orçamento enviado", aprovado:"✅ Aprovado",
+  producao:"🛠️ Produção", pronto:"📦 Pronto", entregue:"🚚 Entregue", cancelado:"❌ Cancelado"
+};
+var PED_COR = {
+  novo:"#8B6BB1", orcamento_enviado:"#6b7db1", aprovado:"#2ECFC4",
+  producao:"#F5A623", pronto:"#13877e", entregue:"#6b7280", cancelado:"#c0234b"
+};
+
+function loadPedidos() {
+  supa("GET","erp_pedidos_fluxo?select=*&order=criado_em.desc&limit=200")
+    .then(function(pedidos){
+      renderPedidos(pedidos||[]);
+      var u=document.getElementById("ped-upd");
+      if(u) u.textContent="· atualizado "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    }).catch(function(e){ console.error(e); toast("Erro ao carregar pedidos: "+e.message,"err"); });
+}
+
+function renderPedidos(pedidos) {
+  // KPIs por status
+  var cont={}; PED_FLUXO.forEach(function(s){cont[s]=0;}); cont.cancelado=0;
+  pedidos.forEach(function(p){ cont[p.status]=(cont[p.status]||0)+1; });
+  var ativos = pedidos.filter(function(p){return p.status!=="entregue"&&p.status!=="cancelado";}).length;
+  var k=document.getElementById("ped-kpis");
+  if(k) k.innerHTML =
+    pedKpi("Em aberto", ativos, "#F5A623", ativos>0) +
+    pedKpi("Em produção", cont.producao||0, "#F5A623", false) +
+    pedKpi("Prontos", cont.pronto||0, "#13877e", (cont.pronto||0)>0) +
+    pedKpi("Entregues", cont.entregue||0, "#6b7280", false);
+
+  // Colunas por status do fluxo
+  var col=document.getElementById("ped-colunas");
+  if(!col) return;
+  if(!pedidos.length){ col.innerHTML='<p style="color:var(--sf);font-size:.85rem">Nenhum pedido ainda. Crie pelo bot: "novo pedido da Maria: 20 caixas".</p>'; return; }
+  col.innerHTML = PED_FLUXO.map(function(status){
+    var lista = pedidos.filter(function(p){return p.status===status;});
+    var cards = lista.map(function(p){
+      var cli = p.cliente_nome ? esc(p.cliente_nome) : "—";
+      var entrega = p.data_entrega ? '<div style="font-size:.7rem;color:var(--sf);margin-top:3px">🗓️ '+esc(p.data_entrega)+'</div>' : '';
+      var valor = (p.valor_total&&p.valor_total>0) ? '<div style="font-size:.72rem;color:#13877e;font-weight:600;margin-top:2px">R$ '+Number(p.valor_total).toLocaleString("pt-BR",{minimumFractionDigits:2})+'</div>' : '';
+      return '<div style="background:#fff;border:1px solid var(--bd);border-left:3px solid '+PED_COR[status]+';border-radius:9px;padding:10px 11px;margin-bottom:8px">'
+        + '<div style="font-weight:600;font-size:.82rem">#'+p.id+' · '+cli+'</div>'
+        + '<div style="font-size:.76rem;color:var(--t);margin-top:2px">'+esc(p.descricao)+'</div>'
+        + valor + entrega + '</div>';
+    }).join("");
+    return '<div style="background:var(--bg2,#f6f7fb);border-radius:12px;padding:12px;min-height:80px">'
+      + '<div style="font-size:.8rem;font-weight:700;color:'+PED_COR[status]+';margin-bottom:10px">'+PED_LABEL[status]+' <span style="color:var(--sf);font-weight:400">('+lista.length+')</span></div>'
+      + (cards||'<div style="font-size:.74rem;color:var(--sf);font-style:italic">vazio</div>')
+      + '</div>';
+  }).join("");
+}
+
+function pedKpi(rotulo, valor, cor, destaque) {
+  return '<div style="background:#fff;border:1px solid '+(destaque?cor:"var(--bd)")+';border-radius:12px;padding:13px">'
+    + '<div style="font-size:.72rem;color:var(--sf)">'+rotulo+'</div>'
+    + '<div style="font-size:1.5rem;font-weight:800;color:'+cor+';margin-top:2px">'+valor+'</div></div>';
+}
+
+// Engancha no showP (que já foi sobrescrito pelo ERP; encadeia de novo)
+(function(){
+  var _prev = window.showP;
+  window.showP = function(id, btn){
+    _prev(id, btn);
+    if (id === "pedidos") { loadPedidos(); }
+  };
+})();
