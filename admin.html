@@ -176,6 +176,7 @@ tr:hover td{background:var(--bg)}
     <button class="ni" onclick="showP('banners',this)">🎯 Banners</button>
     <button class="ni" onclick="showP('badges',this)">🏷️ Badges</button>
     <button class="ni" onclick="showP('cal',this)">📅 Calendário</button>
+    <button class="ni" onclick="showP('erp',this)">📊 ERP / Estoque</button>
     <button class="ni" onclick="showP('config',this)">⚙️ Config</button>
   </nav>
   <div class="sb-ft">
@@ -313,6 +314,24 @@ tr:hover td{background:var(--bg)}
     <p style="font-size:.82rem;color:var(--sf);margin-bottom:16px">Crie etiquetas personalizadas para seus produtos. A cor de fundo e texto são aplicadas automaticamente no site.</p>
     <div class="tb"><div class="tb-l"></div><button class="ba" onclick="openModal('badges')">+ Novo badge</button></div>
     <div class="tw"><table><thead><tr><th>Preview</th><th>Nome</th><th>Cores</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead><tbody id="badges-tbody"></tbody></table></div>
+  </div>
+
+  <div id="panel-erp" style="display:none">
+    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:6px">📊 ERP / Estoque <span id="erp-upd" style="font-size:.8rem;color:var(--sf);font-weight:400"></span></h2>
+    <p style="font-size:.82rem;color:var(--sf);margin-bottom:18px">Estoque, custos e precificação — alimentado pelo bot do Telegram. Atualize o estoque pelo bot (ex.: <i>"a folha tá acabando"</i>, <i>"comprei mais cola"</i>).</p>
+
+    <div id="erp-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px"></div>
+
+    <h3 style="font-size:1.05rem;font-weight:600;margin:8px 0 4px">📦 Estoque dos materiais</h3>
+    <p style="font-size:.78rem;color:var(--sf);margin-bottom:10px">Itens em <b>Acabando</b> ou <b>Acabou</b> aparecem primeiro — são os que precisa repor.</p>
+    <div id="erp-estoque" style="margin-bottom:26px"></div>
+
+    <h3 style="font-size:1.05rem;font-weight:600;margin:8px 0 4px">🏷️ Produtos e preço sugerido</h3>
+    <p style="font-size:.78rem;color:var(--sf);margin-bottom:10px">Preço já com materiais, mão de obra, impressão, custos fixos e sua margem.</p>
+    <div class="tw" style="margin-bottom:26px"><table><thead><tr><th>Produto</th><th>Custo/un</th><th>Preço sugerido/un</th></tr></thead><tbody id="erp-produtos"></tbody></table></div>
+
+    <h3 style="font-size:1.05rem;font-weight:600;margin:8px 0 4px">💰 Últimas precificações</h3>
+    <div class="tw"><table><thead><tr><th>Produto</th><th>Qtd</th><th>Custo</th><th>Preço</th><th>Lucro</th></tr></thead><tbody id="erp-pedidos"></tbody></table></div>
   </div>
 </main>
 </div>
