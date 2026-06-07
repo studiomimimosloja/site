@@ -1069,3 +1069,130 @@ function renderCalAlerts(data) {
   html += '</div>';
   alertsDiv.innerHTML = html;
 }
+
+// ============================================================
+// ERP / ESTOQUE — integrado ao admin (usa o mesmo login/token)
+// ============================================================
+var erpLoaded = false;
+
+function erpBRL(v){ return "R$ " + (Number(v)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+var ERP_NIVEL = {
+  ok:       {txt:"OK",       cor:"#13877e", bg:"rgba(46,207,196,.15)", ord:2},
+  acabando: {txt:"Acabando", cor:"#b9760a", bg:"rgba(245,166,35,.16)", ord:1},
+  acabou:   {txt:"Acabou",   cor:"#c0234b", bg:"rgba(224,73,107,.14)", ord:0}
+};
+
+function loadERP() {
+  Promise.all([
+    supa("GET", "erp_materiais?select=*&order=nome.asc"),
+    supa("GET", "erp_produtos?select=*&order=nome.asc"),
+    supa("GET", "erp_produto_materiais?select=*"),
+    supa("GET", "erp_pedidos?select=*&order=data.desc&limit=15"),
+    supa("GET", "erp_configuracoes?select=*"),
+    supa("GET", "erp_custos_fixos?select=*"),
+    supa("GET", "erp_custos_impressao?select=*")
+  ]).then(function(res){
+    renderERP(res[0]||[], res[1]||[], res[2]||[], res[3]||[], res[4]||[], res[5]||[], res[6]||[]);
+    var u = document.getElementById("erp-upd");
+    if (u) u.textContent = "· atualizado " + new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  }).catch(function(e){
+    console.error(e);
+    toast("Erro ao carregar ERP: " + e.message, "err");
+  });
+}
+
+function renderERP(materiais, produtos, comp, pedidos, cfg, fixos, tintas) {
+  var conf = {}; cfg.forEach(function(c){ conf[c.chave] = c.valor; });
+  var margem = parseFloat(conf.margem_padrao || "0.7");
+  var valorHora = parseFloat(conf.valor_hora || "30");
+  var prodMensal = parseFloat(conf.producao_mensal || "300");
+  var custoFixoUn = fixos.reduce(function(s,f){return s+(parseFloat(f.valor_mensal)||0);},0) / (prodMensal||1);
+  var custoImpFolha = tintas.reduce(function(s,t){return s + (t.rendimento_folhas? (parseFloat(t.valor)/parseFloat(t.rendimento_folhas)):0);},0);
+
+  // KPIs
+  var emAlerta = materiais.filter(function(m){return m.nivel!=="ok";});
+  var acabou = materiais.filter(function(m){return m.nivel==="acabou";}).length;
+  var k = document.getElementById("erp-kpis");
+  if (k) k.innerHTML =
+    erpKpi("Materiais", materiais.length, "no controle de estoque", false) +
+    erpKpi("Precisam de atenção", emAlerta.length, acabou+" acabaram · "+(emAlerta.length-acabou)+" acabando", emAlerta.length>0) +
+    erpKpi("Produtos", produtos.length, "com preço calculável", false) +
+    erpKpi("Sua margem", Math.round(margem*100)+"%", "mão de obra: "+erpBRL(valorHora)+"/h", false);
+
+  // Estoque (alerta primeiro)
+  var ord = materiais.slice().sort(function(a,b){
+    return (ERP_NIVEL[a.nivel]?ERP_NIVEL[a.nivel].ord:9) - (ERP_NIVEL[b.nivel]?ERP_NIVEL[b.nivel].ord:9)
+        || a.nome.localeCompare(b.nome);
+  });
+  var est = document.getElementById("erp-estoque");
+  if (est) {
+    if (!ord.length) { est.innerHTML = '<p style="color:var(--sf);font-size:.85rem">Nenhum material ainda. Registre uma compra pelo bot.</p>'; }
+    else {
+      est.innerHTML = ord.map(function(m){
+        var inf = ERP_NIVEL[m.nivel] || ERP_NIVEL.ok;
+        var obs = m.observacao ? ' <span style="color:var(--sf);font-size:.78rem">· '+esc(m.observacao)+'</span>' : '';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--bd)">'
+          + '<div style="flex:1;font-weight:500">'+esc(m.nome)+obs+'</div>'
+          + '<span style="font-size:.75rem;font-weight:700;padding:4px 11px;border-radius:99px;color:'+inf.cor+';background:'+inf.bg+'">'+inf.txt+'</span>'
+          + '</div>';
+      }).join("");
+    }
+  }
+
+  // Produtos + preço
+  var matById = {}; materiais.forEach(function(m){ matById[m.id]=m; });
+  var compByProd = {}; comp.forEach(function(c){ (compByProd[c.produto_id]=compByProd[c.produto_id]||[]).push(c); });
+  var pb = document.getElementById("erp-produtos");
+  if (pb) {
+    if (!produtos.length) { pb.innerHTML = '<tr><td colspan="3" style="color:var(--sf)">Nenhum produto. Crie pelo bot.</td></tr>'; }
+    else {
+      pb.innerHTML = produtos.map(function(p){
+        var cs = compByProd[p.id]||[];
+        var custoMat = cs.reduce(function(s,c){return s + c.quantidade*((matById[c.material_id]||{}).custo_unitario||0);},0);
+        var custoMO = (p.minutos_producao/60)*valorHora;
+        var custoImp = (p.folhas_impressao||0)*custoImpFolha;
+        var custoUn = custoMat+custoMO+custoImp+custoFixoUn;
+        var preco = custoUn*(1+margem);
+        return '<tr><td><b>'+esc(p.nome)+'</b><br><span style="color:var(--sf);font-size:.76rem">'+cs.length+' material(is) · '+(p.minutos_producao||0)+' min</span></td>'
+          + '<td>'+erpBRL(custoUn)+'</td>'
+          + '<td style="font-weight:700;color:#13877e">'+erpBRL(preco)+'</td></tr>';
+      }).join("");
+    }
+  }
+
+  // Pedidos
+  var pd = document.getElementById("erp-pedidos");
+  if (pd) {
+    if (!pedidos.length) { pd.innerHTML = '<tr><td colspan="5" style="color:var(--sf)">Nenhuma precificação ainda. Peça ao bot.</td></tr>'; }
+    else {
+      pd.innerHTML = pedidos.map(function(p){
+        var lucro = (parseFloat(p.preco_sugerido)||0)-(parseFloat(p.custo_total)||0);
+        var d = p.data ? new Date(p.data).toLocaleDateString("pt-BR") : "";
+        return '<tr><td>'+esc(p.produto_nome||"—")+'<br><span style="color:var(--sf);font-size:.76rem">'+d+'</span></td>'
+          + '<td>'+(parseFloat(p.quantidade)||0)+'</td>'
+          + '<td>'+erpBRL(p.custo_total)+'</td>'
+          + '<td style="font-weight:700;color:#13877e">'+erpBRL(p.preco_sugerido)+'</td>'
+          + '<td>'+erpBRL(lucro)+'</td></tr>';
+      }).join("");
+    }
+  }
+}
+
+function erpKpi(rotulo, valor, nota, alerta) {
+  var borda = alerta ? "#F5A623" : "var(--bd)";
+  var corVal = alerta ? "#b9760a" : "var(--tx)";
+  return '<div style="background:#fff;border:1px solid '+borda+';border-radius:14px;padding:16px">'
+    + '<div style="font-size:.78rem;color:var(--sf)">'+rotulo+'</div>'
+    + '<div style="font-size:1.7rem;font-weight:800;color:'+corVal+';margin-top:2px">'+valor+'</div>'
+    + '<div style="font-size:.72rem;color:var(--sf);margin-top:2px">'+nota+'</div></div>';
+}
+
+// Engancha no showP: ao abrir a aba ERP, carrega os dados
+(function(){
+  var _showP = window.showP;
+  window.showP = function(id, btn){
+    _showP(id, btn);
+    if (id === "erp") { loadERP(); }
+  };
+})();
