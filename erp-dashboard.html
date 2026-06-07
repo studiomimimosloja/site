@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP · Painel Interno — Studio MiMimos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --teal:#2ECFC4; --roxo:#8B6BB1; --ambar:#F5A623; --navy:#1a1a2e;
+    --ok:#2ECFC4; --acabando:#F5A623; --acabou:#e0496b;
+    --bg:#f6f7fb; --card:#ffffff; --linha:#eceef5; --txt:#1a1a2e; --txt2:#6b7280;
+    --sombra:0 1px 3px rgba(26,26,46,.06),0 8px 24px rgba(26,26,46,.05);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;padding:24px;max-width:1180px;margin:0 auto}
+  h1{font-family:'Playfair Display',serif;font-size:30px;font-weight:700}
+  .sub{color:var(--txt2);font-size:14px;margin-top:2px}
+  header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px}
+  .badge-atualiza{font-size:12px;color:var(--txt2);background:var(--card);border:1px solid var(--linha);padding:8px 14px;border-radius:999px;display:flex;align-items:center;gap:8px}
+  .ponto{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  /* Cartões de resumo no topo */
+  .resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px}
+  .kpi{background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:20px;box-shadow:var(--sombra)}
+  .kpi .rotulo{font-size:13px;color:var(--txt2);font-weight:500}
+  .kpi .valor{font-size:30px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums}
+  .kpi .nota{font-size:12px;color:var(--txt2);margin-top:4px}
+  .kpi.alerta{border-color:var(--acabando);background:linear-gradient(180deg,#fffaf0,#fff)}
+  .kpi.alerta .valor{color:var(--ambar)}
+
+  /* Seções */
+  section{background:var(--card);border:1px solid var(--linha);border-radius:18px;padding:22px;box-shadow:var(--sombra);margin-bottom:22px}
+  .titulo-secao{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .titulo-secao h2{font-size:18px;font-weight:700}
+  .titulo-secao .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:rgba(46,207,196,.13)}
+  .explica{font-size:13px;color:var(--txt2);margin-bottom:16px}
+
+  /* Lista de estoque */
+  .mat{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid var(--linha)}
+  .mat:last-child{border-bottom:none}
+  .mat .nome{font-weight:600;flex:1;min-width:0}
+  .mat .obs{font-size:12px;color:var(--txt2);font-weight:400}
+  .pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;white-space:nowrap}
+  .pill.ok{background:rgba(46,207,196,.15);color:#13877e}
+  .pill.acabando{background:rgba(245,166,35,.16);color:#b9760a}
+  .pill.acabou{background:rgba(224,73,107,.14);color:#c0234b}
+  .barra{width:90px;height:8px;border-radius:99px;background:#eef0f6;overflow:hidden;flex-shrink:0}
+  .barra i{display:block;height:100%;border-radius:99px}
+
+  /* Tabelas */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--linha)}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--txt2);font-weight:600}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+  .preco{font-weight:700;color:#13877e}
+
+  .vazio{text-align:center;color:var(--txt2);padding:30px;font-size:14px}
+  .erro{background:#fff0f3;border:1px solid #f3c9d4;color:#c0234b;padding:14px 16px;border-radius:12px;font-size:14px;margin-bottom:20px}
+  .rodape{text-align:center;color:var(--txt2);font-size:12px;margin-top:8px;padding-bottom:30px}
+  @media(max-width:560px){body{padding:14px}h1{font-size:24px}.kpi .valor{font-size:24px}}
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Painel Interno · MiMimos</h1>
+      <div class="sub">Estoque, custos e precificação — alimentado pelo seu bot do Telegram</div>
+    </div>
+    <div class="badge-atualiza"><span class="ponto"></span><span id="atualizado">carregando…</span></div>
+  </header>
+
+  <div id="erro-box"></div>
+
+  <!-- KPIs -->
+  <div class="resumo" id="kpis"></div>
+
+  <!-- Estoque -->
+  <section>
+    <div class="titulo-secao"><div class="ico">📦</div><h2>Estoque dos materiais</h2></div>
+    <p class="explica">Acompanhamento por nível, não por número exato. Itens em <b>Acabando</b> ou <b>Acabou</b> aparecem primeiro — são os que você precisa repor. Atualize pelo bot: <i>"a folha tá acabando"</i> ou <i>"comprei mais cola"</i>.</p>
+    <div id="estoque"></div>
+  </section>
+
+  <!-- Produtos e preços -->
+  <section>
+    <div class="titulo-secao"><div class="ico" style="background:rgba(139,107,177,.14)">🏷️</div><h2>Produtos e preço sugerido</h2></div>
+    <p class="explica">Preço de venda já com materiais, mão de obra, impressão, custos fixos e sua margem. Para recalcular ou criar um produto, fale com o bot.</p>
+    <div id="produtos"></div>
+  </section>
+
+  <!-- Últimas precificações -->
+  <section>
+    <div class="titulo-secao"><div class="ico" style="background:rgba(245,166,35,.16)">💰</div><h2>Últimas precificações</h2></div>
+    <p class="explica">Histórico do que você orçou pelo bot, com custo, preço sugerido e lucro estimado.</p>
+    <div id="pedidos"></div>
+  </section>
+
+  <div class="rodape">Studio MiMimos · ferramenta interna · os dados vêm do Supabase em tempo real</div>
+
+<script>
+// ======== CONFIGURAÇÃO ========
+// Use a ANON KEY (pública, segura para o navegador). NÃO use a service key aqui.
+const SUPABASE_URL  = "https://grmulciyoytzqlrdqmcg.supabase.co";
+const SUPABASE_ANON  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdybXVsY2l5b3l0enFscmRxbWNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NTAyNzUsImV4cCI6MjA5NTEyNjI3NX0.pbkhq2_nHaCsqo8WbH-9TIaCgWAaWgDW2W5zBK9tl-Y";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const BRL = v => "R$ " + (Number(v)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+// Escapa texto vindo do banco antes de injetar no HTML (proteção contra XSS).
+// O bot grava com service key, sem filtro — então a defesa fica aqui, na exibição.
+function esc(v){
+  if(v===null||v===undefined) return "";
+  return String(v)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+const ordemNivel = {acabou:0, acabando:1, ok:2};
+const nivelInfo = {
+  ok:       {txt:"OK",        cls:"ok",       cor:"#2ECFC4", larg:"100%"},
+  acabando: {txt:"Acabando",  cls:"acabando", cor:"#F5A623", larg:"40%"},
+  acabou:   {txt:"Acabou",    cls:"acabou",   cor:"#e0496b", larg:"8%"}
+};
+
+function erro(msg){
+  document.getElementById("erro-box").innerHTML =
+    `<div class="erro"><b>Não consegui carregar os dados.</b><br>${msg}</div>`;
+}
+
+async function carregar(){
+  try{
+    // Verifica login: o painel é interno e só carrega para admin autenticado.
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session){
+      erro("Você precisa estar logado no admin para ver este painel. "
+         + "Faça login e recarregue a página.");
+      return;
+    }
+    const [mat, prod, comp, ped, cfg, fixos, tintas] = await Promise.all([
+      sb.from("erp_materiais").select("*").order("nome"),
+      sb.from("erp_produtos").select("*").order("nome"),
+      sb.from("erp_produto_materiais").select("*"),
+      sb.from("erp_pedidos").select("*").order("data",{ascending:false}).limit(15),
+      sb.from("erp_configuracoes").select("*"),
+      sb.from("erp_custos_fixos").select("*"),
+      sb.from("erp_custos_impressao").select("*")
+    ]);
+    for(const r of [mat,prod,comp,ped,cfg,fixos,tintas]){
+      if(r.error) throw r.error;
+    }
+    render(mat.data, prod.data, comp.data, ped.data, cfg.data, fixos.data, tintas.data);
+    document.getElementById("atualizado").textContent =
+      "atualizado " + new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){
+    erro((e && e.message) ? e.message : "Verifique a ANON KEY e se o SQL foi rodado no Supabase.");
+  }
+}
+
+function render(materiais, produtos, comp, pedidos, cfg, fixos, tintas){
+  const conf = Object.fromEntries((cfg||[]).map(c=>[c.chave,c.valor]));
+  const margem = parseFloat(conf.margem_padrao || "0.7");
+  const valorHora = parseFloat(conf.valor_hora || "30");
+  const prodMensal = parseFloat(conf.producao_mensal || "300");
+  const custoFixoUn = (fixos||[]).reduce((s,f)=>s+(+f.valor_mensal||0),0) / (prodMensal||1);
+  const custoImpFolha = (tintas||[]).reduce((s,t)=>s + (t.rendimento_folhas? (+t.valor/+t.rendimento_folhas):0),0);
+
+  // ---- KPIs ----
+  const emAlerta = materiais.filter(m=>m.nivel!=="ok");
+  const acabou = materiais.filter(m=>m.nivel==="acabou").length;
+  document.getElementById("kpis").innerHTML = `
+    <div class="kpi"><div class="rotulo">Materiais cadastrados</div><div class="valor">${materiais.length}</div><div class="nota">no controle de estoque</div></div>
+    <div class="kpi ${emAlerta.length?'alerta':''}"><div class="rotulo">Precisam de atenção</div><div class="valor">${emAlerta.length}</div><div class="nota">${acabou} acabaram · ${emAlerta.length-acabou} acabando</div></div>
+    <div class="kpi"><div class="rotulo">Produtos</div><div class="valor">${produtos.length}</div><div class="nota">com preço calculável</div></div>
+    <div class="kpi"><div class="rotulo">Sua margem</div><div class="valor">${Math.round(margem*100)}%</div><div class="nota">mão de obra: ${BRL(valorHora)}/h</div></div>`;
+
+  // ---- Estoque (ordenado: alerta primeiro) ----
+  const ordenados = [...materiais].sort((a,b)=>
+    (ordemNivel[a.nivel]??9)-(ordemNivel[b.nivel]??9) || a.nome.localeCompare(b.nome));
+  const elEst = document.getElementById("estoque");
+  if(!ordenados.length){ elEst.innerHTML = `<div class="vazio">Nenhum material ainda. Registre uma compra pelo bot.</div>`; }
+  else{
+    elEst.innerHTML = ordenados.map(m=>{
+      const inf = nivelInfo[m.nivel] || nivelInfo.ok;
+      return `<div class="mat">
+        <div class="barra"><i style="width:${inf.larg};background:${inf.cor}"></i></div>
+        <div class="nome">${esc(m.nome)}${m.observacao?` <span class="obs">· ${esc(m.observacao)}</span>`:""}</div>
+        <span class="pill ${inf.cls}">${inf.txt}</span>
+      </div>`;
+    }).join("");
+  }
+
+  // ---- Produtos + preço ----
+  const matById = Object.fromEntries(materiais.map(m=>[m.id,m]));
+  const compByProd = {};
+  (comp||[]).forEach(c=>{(compByProd[c.produto_id]=compByProd[c.produto_id]||[]).push(c)});
+  const elProd = document.getElementById("produtos");
+  if(!produtos.length){ elProd.innerHTML = `<div class="vazio">Nenhum produto cadastrado. Crie um pelo bot.</div>`; }
+  else{
+    let linhas = produtos.map(p=>{
+      const cs = compByProd[p.id]||[];
+      const custoMat = cs.reduce((s,c)=>s + c.quantidade*(matById[c.material_id]?.custo_unitario||0),0);
+      const custoMO = (p.minutos_producao/60)*valorHora;
+      const custoImp = (p.folhas_impressao||0)*custoImpFolha;
+      const custoUn = custoMat+custoMO+custoImp+custoFixoUn;
+      const preco = custoUn*(1+margem);
+      return `<tr>
+        <td><b>${esc(p.nome)}</b><br><span class="obs">${cs.length} material(is) · ${esc(p.minutos_producao||0)} min</span></td>
+        <td class="num">${BRL(custoUn)}</td>
+        <td class="num preco">${BRL(preco)}</td>
+      </tr>`;
+    }).join("");
+    elProd.innerHTML = `<table><thead><tr><th>Produto</th><th class="num">Custo/un</th><th class="num">Preço sugerido/un</th></tr></thead><tbody>${linhas}</tbody></table>`;
+  }
+
+  // ---- Pedidos ----
+  const elPed = document.getElementById("pedidos");
+  if(!pedidos.length){ elPed.innerHTML = `<div class="vazio">Nenhuma precificação ainda. Peça uma ao bot: "precifique 20 caixas".</div>`; }
+  else{
+    let linhas = pedidos.map(p=>{
+      const lucro = (+p.preco_sugerido||0)-(+p.custo_total||0);
+      const d = p.data ? new Date(p.data).toLocaleDateString("pt-BR") : "";
+      return `<tr>
+        <td>${esc(p.produto_nome||"—")}<br><span class="obs">${d}</span></td>
+        <td class="num">${(+p.quantidade||0)}</td>
+        <td class="num">${BRL(p.custo_total)}</td>
+        <td class="num preco">${BRL(p.preco_sugerido)}</td>
+        <td class="num">${BRL(lucro)}</td>
+      </tr>`;
+    }).join("");
+    elPed.innerHTML = `<table><thead><tr><th>Produto</th><th class="num">Qtd</th><th class="num">Custo</th><th class="num">Preço</th><th class="num">Lucro</th></tr></thead><tbody>${linhas}</tbody></table>`;
+  }
+}
+
+carregar();
+setInterval(carregar, 60000); // atualiza a cada 1 min
+</script>
+</body>
+</html>
