@@ -178,6 +178,8 @@ tr:hover td{background:var(--bg)}
     <button class="ni" onclick="showP('cal',this)">📅 Calendário</button>
     <button class="ni" onclick="showP('erp',this)">📊 ERP / Estoque</button>
     <button class="ni" onclick="showP('pedidos',this)">📋 Pedidos</button>
+    <button class="ni" onclick="showP('clientes',this)">👥 Clientes</button>
+    <button class="ni" onclick="showP('relatorio',this)">📈 Relatório</button>
     <button class="ni" onclick="showP('config',this)">⚙️ Config</button>
   </nav>
   <div class="sb-ft">
@@ -340,6 +342,27 @@ tr:hover td{background:var(--bg)}
     <p style="font-size:.82rem;color:var(--sf);margin-bottom:18px">Acompanhe seus pedidos por etapa. Crie e mova pelo bot (ex.: <i>"novo pedido da Maria: 20 caixas"</i>, <i>"pedido 3 pronto"</i>) — aqui você vê tudo organizado.</p>
     <div id="ped-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:22px"></div>
     <div id="ped-colunas" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px"></div>
+  </div>
+
+  <div id="panel-clientes" style="display:none">
+    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:6px">👥 Clientes <span id="cli-upd" style="font-size:.8rem;color:var(--sf);font-weight:400"></span></h2>
+    <p style="font-size:.82rem;color:var(--sf);margin-bottom:18px">Suas clientes e o histórico de cada uma. Cadastradas automaticamente quando você cria um pedido pelo bot.</p>
+    <div id="cli-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px"></div>
+    <div id="cli-lista"></div>
+  </div>
+
+  <div id="panel-relatorio" style="display:none">
+    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:6px">📈 Relatório <span id="rel-upd" style="font-size:.8rem;color:var(--sf);font-weight:400"></span></h2>
+    <p style="font-size:.82rem;color:var(--sf);margin-bottom:18px">Visão do seu negócio. Use o seletor para mudar o mês.</p>
+    <div style="margin-bottom:18px">
+      <label style="font-size:.82rem;color:var(--sf);margin-right:8px">Mês:</label>
+      <input type="month" id="rel-mes" style="padding:7px 10px;border:1px solid var(--bd);border-radius:8px;font-size:.9rem">
+    </div>
+    <div id="rel-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px"></div>
+    <h3 style="font-size:1.05rem;font-weight:600;margin:8px 0 10px">🏆 Produtos mais pedidos no mês</h3>
+    <div id="rel-produtos" style="margin-bottom:24px"></div>
+    <h3 style="font-size:1.05rem;font-weight:600;margin:8px 0 10px">📊 Pedidos por status</h3>
+    <div id="rel-status"></div>
   </div>
 </main>
 </div>
