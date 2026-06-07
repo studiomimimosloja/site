@@ -1267,3 +1267,169 @@ function pedKpi(rotulo, valor, cor, destaque) {
     if (id === "pedidos") { loadPedidos(); }
   };
 })();
+
+// ============================================================
+// CLIENTES — histórico de cada cliente (usa login/token do admin)
+// ============================================================
+function loadClientes() {
+  Promise.all([
+    supa("GET","erp_clientes?select=*&order=nome.asc"),
+    supa("GET","erp_pedidos_fluxo?select=*&order=criado_em.desc&limit=500")
+  ]).then(function(res){
+    renderClientes(res[0]||[], res[1]||[]);
+    var u=document.getElementById("cli-upd");
+    if(u) u.textContent="· atualizado "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  }).catch(function(e){ console.error(e); toast("Erro ao carregar clientes: "+e.message,"err"); });
+}
+
+function brlNum(v){ return "R$ "+(Number(v)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function soDigitos(s){ return String(s||"").replace(/\D/g,""); }
+
+function renderClientes(clientes, pedidos) {
+  // agrupa pedidos por cliente (por id, e por nome como fallback)
+  var porCli = {};
+  pedidos.forEach(function(p){
+    var chave = p.cliente_id || ("nome:"+(p.cliente_nome||"").toLowerCase());
+    (porCli[chave]=porCli[chave]||[]).push(p);
+  });
+
+  // KPIs gerais
+  var totalGasto = pedidos.reduce(function(s,p){return s+(Number(p.valor_total)||0);},0);
+  var k=document.getElementById("cli-kpis");
+  if(k) k.innerHTML =
+    cliKpi("Clientes", clientes.length, "#8B6BB1") +
+    cliKpi("Pedidos totais", pedidos.length, "#2ECFC4") +
+    cliKpi("Faturamento total", brlNum(totalGasto), "#13877e");
+
+  var div=document.getElementById("cli-lista");
+  if(!div) return;
+  if(!clientes.length){ div.innerHTML='<p style="color:var(--sf);font-size:.85rem">Nenhuma cliente ainda. Crie um pedido pelo bot (ex.: "novo pedido da Maria: 20 caixas") e ela aparece aqui.</p>'; return; }
+
+  // ordena clientes por total gasto (maior primeiro)
+  var enriquecidos = clientes.map(function(c){
+    var ps = porCli[c.id] || porCli["nome:"+(c.nome||"").toLowerCase()] || [];
+    var gasto = ps.reduce(function(s,p){return s+(Number(p.valor_total)||0);},0);
+    return {cli:c, pedidos:ps, gasto:gasto};
+  }).sort(function(a,b){ return b.gasto - a.gasto; });
+
+  div.innerHTML = enriquecidos.map(function(e){
+    var c=e.cli;
+    var wpp = soDigitos(c.whatsapp);
+    var btnWpp = wpp ? '<a href="https://wa.me/'+(wpp.length<=11?"55"+wpp:wpp)+'" target="_blank" rel="noopener" style="font-size:.76rem;color:#13877e;font-weight:600;text-decoration:none">💬 WhatsApp</a>' : '<span style="font-size:.74rem;color:var(--sf)">sem WhatsApp</span>';
+    var ativos = e.pedidos.filter(function(p){return p.status!=="entregue"&&p.status!=="cancelado";}).length;
+    var pedidosHtml = e.pedidos.length ? e.pedidos.map(function(p){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--bd);font-size:.78rem">'
+        + '<span>#'+p.id+' · '+esc(p.descricao)+'</span>'
+        + '<span style="white-space:nowrap;color:var(--sf)">'+brlNum(p.valor_total)+'</span></div>';
+    }).join("") : '<div style="font-size:.76rem;color:var(--sf);padding-top:6px">Nenhum pedido registrado.</div>';
+
+    return '<details style="background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:10px">'
+      + '<summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">'
+      + '<div><span style="font-weight:600;font-size:.95rem">'+esc(c.nome)+'</span> '+btnWpp
+      + '<div style="font-size:.74rem;color:var(--sf);margin-top:2px">'+e.pedidos.length+' pedido(s)'+(ativos?' · '+ativos+' em aberto':'')+'</div></div>'
+      + '<div style="text-align:right"><div style="font-size:1.1rem;font-weight:800;color:#13877e">'+brlNum(e.gasto)+'</div><div style="font-size:.68rem;color:var(--sf)">total gasto</div></div>'
+      + '</summary>'
+      + '<div style="margin-top:8px">'+pedidosHtml+'</div>'
+      + '</details>';
+  }).join("");
+}
+
+function cliKpi(rotulo, valor, cor){
+  return '<div style="background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px">'
+    + '<div style="font-size:.74rem;color:var(--sf)">'+rotulo+'</div>'
+    + '<div style="font-size:1.5rem;font-weight:800;color:'+cor+';margin-top:2px">'+valor+'</div></div>';
+}
+
+// ============================================================
+// RELATÓRIO DO MÊS
+// ============================================================
+function loadRelatorio() {
+  var inp=document.getElementById("rel-mes");
+  if(inp && !inp.value){
+    var hoje=new Date();
+    inp.value=hoje.getFullYear()+"-"+String(hoje.getMonth()+1).padStart(2,"0");
+    inp.onchange=loadRelatorio;
+  }
+  supa("GET","erp_pedidos_fluxo?select=*&order=criado_em.desc&limit=1000")
+    .then(function(pedidos){ renderRelatorio(pedidos||[], inp?inp.value:null); })
+    .catch(function(e){ console.error(e); toast("Erro ao carregar relatório: "+e.message,"err"); });
+}
+
+function renderRelatorio(pedidos, mesRef) {
+  // filtra pelo mês escolhido (formato YYYY-MM) usando criado_em
+  var doMes = pedidos.filter(function(p){
+    return p.criado_em && String(p.criado_em).slice(0,7)===mesRef;
+  });
+  // faturamento considera pedidos não cancelados
+  var validos = doMes.filter(function(p){return p.status!=="cancelado";});
+  var faturamento = validos.reduce(function(s,p){return s+(Number(p.valor_total)||0);},0);
+  var entregues = doMes.filter(function(p){return p.status==="entregue";}).length;
+
+  // comparação com mês anterior
+  var ref = mesRef ? mesRef.split("-") : null;
+  var antMes = "";
+  if(ref){ var d=new Date(Number(ref[0]),Number(ref[1])-2,1); antMes=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+  var doAnt = pedidos.filter(function(p){return p.criado_em && String(p.criado_em).slice(0,7)===antMes && p.status!=="cancelado";});
+  var fatAnt = doAnt.reduce(function(s,p){return s+(Number(p.valor_total)||0);},0);
+  var variacao = fatAnt>0 ? Math.round((faturamento-fatAnt)/fatAnt*100) : null;
+  var varTxt = variacao===null ? "—" : (variacao>=0?"+":"")+variacao+"% vs mês anterior";
+
+  var k=document.getElementById("rel-kpis");
+  if(k) k.innerHTML =
+    relKpi("Faturamento", brlNum(faturamento), varTxt, variacao!==null&&variacao<0) +
+    relKpi("Pedidos", String(doMes.length), entregues+" entregues", false) +
+    relKpi("Ticket médio", brlNum(validos.length?faturamento/validos.length:0), "por pedido", false);
+
+  // produtos mais pedidos (parse simples da descrição: "20 caixas..., 50 tags")
+  var contagem={};
+  validos.forEach(function(p){
+    String(p.descricao||"").split(/,|\se\s/).forEach(function(parte){
+      var m=parte.trim().match(/^([\d.,]+)\s+(.+)/);
+      if(m){ var nome=m[2].trim().toLowerCase(); var qtd=parseFloat(m[1].replace(",","."))||0;
+        contagem[nome]=(contagem[nome]||0)+qtd; }
+    });
+  });
+  var ranking=Object.keys(contagem).map(function(n){return {nome:n,qtd:contagem[n]};})
+    .sort(function(a,b){return b.qtd-a.qtd;}).slice(0,8);
+  var maxq = ranking.length?ranking[0].qtd:1;
+  var rp=document.getElementById("rel-produtos");
+  if(rp){
+    if(!ranking.length){ rp.innerHTML='<p style="color:var(--sf);font-size:.84rem">Sem pedidos neste mês.</p>'; }
+    else rp.innerHTML=ranking.map(function(r){
+      var pct=Math.round(r.qtd/maxq*100);
+      return '<div style="margin-bottom:9px">'
+        + '<div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px"><span>'+esc(r.nome)+'</span><span style="color:var(--sf)">'+(r.qtd%1?r.qtd:r.qtd|0)+'</span></div>'
+        + '<div style="background:var(--bd);border-radius:99px;height:8px"><div style="width:'+pct+'%;background:#2ECFC4;height:8px;border-radius:99px"></div></div></div>';
+    }).join("");
+  }
+
+  // pedidos por status (no mês)
+  var st={}; doMes.forEach(function(p){st[p.status]=(st[p.status]||0)+1;});
+  var rs=document.getElementById("rel-status");
+  if(rs){
+    var labels={novo:"🆕 Novo",orcamento_enviado:"📄 Orçamento",aprovado:"✅ Aprovado",producao:"🛠️ Produção",pronto:"📦 Pronto",entregue:"🚚 Entregue",cancelado:"❌ Cancelado"};
+    var chips=Object.keys(labels).filter(function(s){return st[s];}).map(function(s){
+      return '<span style="display:inline-block;background:#fff;border:1px solid var(--bd);border-radius:99px;padding:5px 12px;margin:0 6px 6px 0;font-size:.8rem">'+labels[s]+' <b>'+st[s]+'</b></span>';
+    }).join("");
+    rs.innerHTML = chips || '<p style="color:var(--sf);font-size:.84rem">Sem pedidos neste mês.</p>';
+  }
+  var u=document.getElementById("rel-upd");
+  if(u) u.textContent="· "+(mesRef||"");
+}
+
+function relKpi(rotulo, valor, nota, alerta){
+  return '<div style="background:#fff;border:1px solid '+(alerta?"#F5A623":"var(--bd)")+';border-radius:14px;padding:16px">'
+    + '<div style="font-size:.76rem;color:var(--sf)">'+rotulo+'</div>'
+    + '<div style="font-size:1.6rem;font-weight:800;color:'+(alerta?"#b9760a":"var(--tx)")+';margin-top:2px">'+valor+'</div>'
+    + '<div style="font-size:.7rem;color:var(--sf);margin-top:2px">'+nota+'</div></div>';
+}
+
+// engancha no showP (encadeia mais uma vez)
+(function(){
+  var _p = window.showP;
+  window.showP = function(id, btn){
+    _p(id, btn);
+    if (id === "clientes") { loadClientes(); }
+    if (id === "relatorio") { loadRelatorio(); }
+  };
+})();
