@@ -177,6 +177,7 @@ tr:hover td{background:var(--bg)}
     <button class="ni" onclick="showP('badges',this)">🏷️ Badges</button>
     <button class="ni" onclick="showP('cal',this)">📅 Calendário</button>
     <button class="ni" onclick="showP('erp',this)">📊 ERP / Estoque</button>
+    <button class="ni" onclick="showP('pedidos',this)">📋 Pedidos</button>
     <button class="ni" onclick="showP('config',this)">⚙️ Config</button>
   </nav>
   <div class="sb-ft">
@@ -332,6 +333,13 @@ tr:hover td{background:var(--bg)}
 
     <h3 style="font-size:1.05rem;font-weight:600;margin:8px 0 4px">💰 Últimas precificações</h3>
     <div class="tw"><table><thead><tr><th>Produto</th><th>Qtd</th><th>Custo</th><th>Preço</th><th>Lucro</th></tr></thead><tbody id="erp-pedidos"></tbody></table></div>
+  </div>
+
+  <div id="panel-pedidos" style="display:none">
+    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:6px">📋 Pedidos <span id="ped-upd" style="font-size:.8rem;color:var(--sf);font-weight:400"></span></h2>
+    <p style="font-size:.82rem;color:var(--sf);margin-bottom:18px">Acompanhe seus pedidos por etapa. Crie e mova pelo bot (ex.: <i>"novo pedido da Maria: 20 caixas"</i>, <i>"pedido 3 pronto"</i>) — aqui você vê tudo organizado.</p>
+    <div id="ped-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:22px"></div>
+    <div id="ped-colunas" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px"></div>
   </div>
 </main>
 </div>
