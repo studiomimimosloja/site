@@ -135,14 +135,44 @@ function toggleFaq(btn) {
     // ── Gerar preço para um produto ──
     function buildPrice(p) {
       var priceDiv = el('div', {className:'product-price'});
+
+      // Preço por faixa de quantidade (se o produto tiver)
+      var pf = p.precos_faixa;
+      if (typeof pf === "string") { try { pf = JSON.parse(pf); } catch(e) { pf = null; } }
+      if (pf && pf.ativo && ((pf.faixas && pf.faixas.length) || pf.pedido_minimo)) {
+        if (pf.pedido_minimo) {
+          priceDiv.appendChild(el('small', {textContent:'Pedido mínimo: ' + pf.pedido_minimo + ' un', style:'display:block;color:var(--soft);font-size:.72rem;margin-bottom:4px'}));
+        }
+        var tabela = el('div', {style:'display:flex;flex-direction:column;gap:2px'});
+        (pf.faixas || []).forEach(function(f, i) {
+          var ant = i === 0 ? (pf.pedido_minimo || 1) : (pf.faixas[i-1].ate + 1);
+          var rotulo = (i === 0 && pf.pedido_minimo) ? ('a partir de ' + pf.pedido_minimo + ' un')
+                      : ('até ' + f.ate + ' un');
+          var linha = el('div', {style:'display:flex;justify-content:space-between;gap:10px;font-size:.82rem'});
+          linha.appendChild(el('span', {textContent: rotulo, style:'color:var(--soft)'}));
+          linha.appendChild(el('strong', {textContent: 'R$ ' + f.preco}));
+          tabela.appendChild(linha);
+        });
+        if (pf.acima_sob_consulta) {
+          var linhaSc = el('div', {style:'display:flex;justify-content:space-between;gap:10px;font-size:.82rem'});
+          var ultima = (pf.faixas && pf.faixas.length) ? ('acima de ' + pf.faixas[pf.faixas.length-1].ate + ' un') : 'acima';
+          linhaSc.appendChild(el('span', {textContent: ultima, style:'color:var(--soft)'}));
+          linhaSc.appendChild(el('strong', {textContent: 'Sob consulta'}));
+          tabela.appendChild(linhaSc);
+        }
+        priceDiv.appendChild(tabela);
+        return priceDiv;
+      }
+
+      // Preço único (comportamento original)
       if (p.preco && p.preco_tipo !== "consulta") {
         if (p.promo && p.promo_preco) {
           priceDiv.appendChild(el('del', {textContent:'R$ ' + p.preco, style:'font-size:.8rem;color:var(--soft)'}));
           priceDiv.appendChild(document.createElement('br'));
         }
         if (p.preco_tipo === "partir") priceDiv.appendChild(el('small', {textContent:'a partir de'}));
-        var pf = p.promo && p.promo_preco ? p.promo_preco : p.preco;
-        priceDiv.appendChild(document.createTextNode('R$ ' + pf));
+        var pfx = p.promo && p.promo_preco ? p.promo_preco : p.preco;
+        priceDiv.appendChild(document.createTextNode('R$ ' + pfx));
       } else {
         priceDiv.appendChild(el('small', {textContent:'a partir de'}));
         priceDiv.appendChild(document.createTextNode('Sob consulta'));
