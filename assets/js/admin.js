@@ -180,6 +180,7 @@ function openM() {
   document.getElementById("fpc").checked = false;
   document.getElementById("pflds").classList.remove("sh");
   document.getElementById("eid").value = "";
+  carregarPrecosFaixa(null);
   extraFotos = [];
   renderExtraFotos();
   document.getElementById("mt").textContent = "Novo produto";
@@ -205,6 +206,7 @@ function editP(id) {
   document.getElementById("fbdg").value = p.badge || "Nenhum";
   document.getElementById("fpr").value = p.preco || "";
   document.getElementById("fpt").value = p.preco_tipo || "fixo";
+  carregarPrecosFaixa(p);
   document.getElementById("fd").value = p.descricao || "";
   document.getElementById("fwpp").value = p.whatsapp_msg || "";
   document.getElementById("fsts").value = p.status || "Ativo";
@@ -375,7 +377,8 @@ function saveP() {
       variacao_nome: document.getElementById("fvar").value.trim() || null,
       promo: promo,
       promo_preco: promo ? document.getElementById("fpp").value.trim() : "",
-      promo_texto: promo ? document.getElementById("fptx").value.trim() : ""
+      promo_texto: promo ? document.getElementById("fptx").value.trim() : "",
+      precos_faixa: montarPrecosFaixa()
     };
     if (editId) {
       return supa("PATCH", "produtos?id=eq." + editId, obj).then(function() {
@@ -1433,3 +1436,63 @@ function relKpi(rotulo, valor, nota, alerta){
     if (id === "relatorio") { loadRelatorio(); }
   };
 })();
+
+// ============================================================
+// FAIXAS DE PREÇO POR QUANTIDADE (catálogo)
+// ============================================================
+// Toggle da caixa de faixas
+document.addEventListener("change", function(e){
+  if (e.target && e.target.id === "ffx_on") {
+    var box = document.getElementById("ffx_box");
+    if (box) box.style.display = e.target.checked ? "block" : "none";
+  }
+});
+
+// Lê os campos do form e monta o objeto JSON (ou null se não usar)
+function montarPrecosFaixa() {
+  var on = document.getElementById("ffx_on");
+  if (!on || !on.checked) return null;
+  var num = function(id){ var v=(document.getElementById(id).value||"").trim().replace(",","."); return v?parseFloat(v):null; };
+  var txt = function(id){ return (document.getElementById(id).value||"").trim().replace(",","."); };
+  var faixas = [];
+  [["ffx_q1","ffx_p1"],["ffx_q2","ffx_p2"],["ffx_q3","ffx_p3"]].forEach(function(par){
+    var ate = num(par[0]); var preco = txt(par[1]);
+    if (ate && preco) faixas.push({ate: ate, preco: preco});
+  });
+  var minimo = num("ffx_min");
+  var consulta = document.getElementById("ffx_consulta");
+  // se não preencheu nada útil, não salva
+  if (!faixas.length && !minimo) return null;
+  return {
+    ativo: true,
+    pedido_minimo: minimo || null,
+    faixas: faixas,
+    acima_sob_consulta: consulta ? consulta.checked : false
+  };
+}
+
+// Preenche o form ao editar um produto
+function carregarPrecosFaixa(p) {
+  var pf = p && p.precos_faixa ? p.precos_faixa : null;
+  if (typeof pf === "string") { try { pf = JSON.parse(pf); } catch(e){ pf=null; } }
+  var on = document.getElementById("ffx_on");
+  var box = document.getElementById("ffx_box");
+  var set = function(id,v){ var el=document.getElementById(id); if(el) el.value = (v==null?"":String(v).replace(".",",")); };
+  // limpa
+  ["ffx_min","ffx_q1","ffx_p1","ffx_q2","ffx_p2","ffx_q3","ffx_p3"].forEach(function(id){ set(id,""); });
+  if (document.getElementById("ffx_consulta")) document.getElementById("ffx_consulta").checked = false;
+
+  if (pf && pf.ativo) {
+    if(on) on.checked = true;
+    if(box) box.style.display = "block";
+    set("ffx_min", pf.pedido_minimo);
+    var f = pf.faixas || [];
+    if (f[0]) { set("ffx_q1", f[0].ate); set("ffx_p1", f[0].preco); }
+    if (f[1]) { set("ffx_q2", f[1].ate); set("ffx_p2", f[1].preco); }
+    if (f[2]) { set("ffx_q3", f[2].ate); set("ffx_p3", f[2].preco); }
+    if (document.getElementById("ffx_consulta")) document.getElementById("ffx_consulta").checked = !!pf.acima_sob_consulta;
+  } else {
+    if(on) on.checked = false;
+    if(box) box.style.display = "none";
+  }
+}
