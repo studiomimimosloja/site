@@ -395,6 +395,28 @@ tr:hover td{background:var(--bg)}
       <div class="fi"><label class="fl">Badge</label><select class="fx" id="fbdg"><option value="Nenhum">Nenhum</option><option value="Novo">Novo</option><option value="Personalizável">Personalizável</option><option value="Mais pedido">Mais pedido</option><option value="Sob consulta">Sob consulta</option></select></div>
       <div class="fi"><label class="fl">Preço</label><input class="fx" id="fpr" placeholder="Ex: 30,90"></div>
       <div class="fi"><label class="fl">Tipo de preço</label><select class="fx" id="fpt"><option value="fixo">Valor fixo</option><option value="partir">A partir de</option><option value="consulta">Sob consulta</option></select></div>
+      <div class="fi fw" style="background:var(--bg2,#f6f7fb);border-radius:10px;padding:12px 14px">
+        <label class="fl" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="ffx_on" style="width:auto"> 💰 Usar preço por quantidade (faixas)
+        </label>
+        <div id="ffx_box" style="display:none;margin-top:10px">
+          <div style="font-size:.76rem;color:var(--sf);margin-bottom:10px">Opcional. Deixe em branco o que não usar. Cliente vê uma tabelinha de preços.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+            <div style="flex:1;min-width:120px"><label class="fl">Pedido mínimo (un)</label><input class="fx" id="ffx_min" placeholder="Ex: 10"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+            <div><label class="fl">Até quantas un</label><input class="fx" id="ffx_q1" placeholder="10"></div>
+            <div><label class="fl">Preço un (R$)</label><input class="fx" id="ffx_p1" placeholder="4,29"></div>
+            <div><input class="fx" id="ffx_q2" placeholder="20"></div>
+            <div><input class="fx" id="ffx_p2" placeholder="3,99"></div>
+            <div><input class="fx" id="ffx_q3" placeholder="50"></div>
+            <div><input class="fx" id="ffx_p3" placeholder="3,59"></div>
+          </div>
+          <label class="fl" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px">
+            <input type="checkbox" id="ffx_consulta" style="width:auto"> Acima da última faixa: "Sob consulta"
+          </label>
+        </div>
+      </div>
       <div class="fi fw"><label class="fl">Descrição curta *</label><textarea class="fx ft" id="fd" placeholder="Descrição do produto..."></textarea></div>
       <div class="fi fw"><label class="fl">Mensagem WhatsApp</label><input class="fx" id="fwpp" placeholder="Olá! Me interesso no produto *Nome*. Pode me ajudar?"></div>
       <div class="fi"><label class="fl">Status</label><select class="fx" id="fsts"><option value="Ativo">Ativo</option><option value="Oculto">Oculto</option><option value="Esgotado">Esgotado</option></select></div>
