@@ -626,19 +626,31 @@ function toggleFaq(btn) {
       var carousel = document.getElementById('hero-carousel');
       if (!track || !carousel) return;
 
-      // Coleta produtos com foto (até 6), na ordem do catálogo
+      // Coleta TODAS as fotos do catálogo (principal + extras de cada produto)
       var comFoto = [];
       (data || []).forEach(function(p) {
-        if (p.foto_url && comFoto.length < 6) {
-          comFoto.push({ foto: p.foto_url, nome: p.nome || '' });
-        }
+        if (p.foto_url) comFoto.push({ foto: p.foto_url, nome: p.nome || '' });
+        var extras = p.fotos_extras || [];
+        if (typeof extras === "string") { try { extras = JSON.parse(extras); } catch(e) { extras = []; } }
+        (extras || []).forEach(function(url) {
+          if (url) comFoto.push({ foto: url, nome: p.nome || '' });
+        });
       });
+
+      // Embaralha (ordem aleatória a cada visita) — algoritmo Fisher-Yates
+      for (var j = comFoto.length - 1; j > 0; j--) {
+        var k = Math.floor(Math.random() * (j + 1));
+        var tmp = comFoto[j]; comFoto[j] = comFoto[k]; comFoto[k] = tmp;
+      }
 
       // Sem fotos: esconde o carrossel (não deixa espaço quebrado)
       if (!comFoto.length) { carousel.style.display = 'none'; return; }
 
       track.innerHTML = '';
       dotsWrap.innerHTML = '';
+      // Com muitas fotos, esconde os pontinhos (ficaria uma fileira enorme)
+      var mostrarDots = comFoto.length <= 8;
+      dotsWrap.style.display = mostrarDots ? 'flex' : 'none';
       comFoto.forEach(function(item, i) {
         var slide = document.createElement('div');
         slide.className = 'hero-carousel-slide' + (i === 0 ? ' active' : '');
@@ -655,10 +667,12 @@ function toggleFaq(btn) {
         }
         track.appendChild(slide);
 
-        var dot = document.createElement('span');
-        if (i === 0) dot.className = 'active';
-        dot.addEventListener('click', function() { goToSlide(i); });
-        dotsWrap.appendChild(dot);
+        if (mostrarDots) {
+          var dot = document.createElement('span');
+          if (i === 0) dot.className = 'active';
+          dot.addEventListener('click', function() { goToSlide(i); });
+          dotsWrap.appendChild(dot);
+        }
       });
 
       var slides = track.querySelectorAll('.hero-carousel-slide');
