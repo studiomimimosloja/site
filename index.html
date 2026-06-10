@@ -45,6 +45,29 @@
 
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/variations.css">
+<style>
+/* Botão flutuante "Pedir Orçamento" — sempre visível, canto inferior direito */
+.wl-float{
+  position:fixed; right:22px; bottom:22px; z-index:900;
+  display:flex; align-items:center; gap:8px;
+  background:#2ECFC4; color:#0d2b29; border:none;
+  padding:14px 20px; border-radius:999px; cursor:pointer;
+  font-weight:700; font-size:.95rem; letter-spacing:.01em;
+  box-shadow:0 8px 24px rgba(46,207,196,.45);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.wl-float:hover{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(46,207,196,.55); }
+.wl-float-count{
+  background:#1a1a2e; color:#fff; min-width:22px; height:22px; padding:0 6px;
+  border-radius:999px; align-items:center; justify-content:center;
+  font-size:.8rem; font-weight:700;
+}
+.wl-float.wl-pulse{ animation:wlpulse .4s ease; }
+@keyframes wlpulse{ 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+@media (max-width:560px){
+  .wl-float{ right:14px; bottom:14px; padding:12px 16px; font-size:.88rem; }
+}
+</style>
 </head>
 <body>
 
@@ -137,7 +160,11 @@
 </section>
 
 <!-- ══ DESTAQUES (produtos em promo/destaque) ══════ -->
-<section class="destaques-section" aria-labelledby="destaques-title">
+<!-- LEMBRETE: seção "Em destaque" temporariamente desativada a pedido do Math
+     (catálogo ainda pequeno / itens apareciam aleatórios). Para REATIVAR quando
+     o catálogo estiver mais recheado: remova o style="display:none" abaixo e
+     descomente a linha "renderDestaques(produtosData);" no main.js. -->
+<section class="destaques-section" aria-labelledby="destaques-title" style="display:none">
   <div class="section-inner">
     <div class="section-header center reveal">
       <div class="eyebrow">Ofertas e novidades</div>
@@ -483,8 +510,8 @@
 </div>
 
 <!-- Botão flutuante da lista -->
-<button class="wl-float" id="wl-float" onclick="toggleWishlist()" style="display:none" aria-label="Ver lista de pedidos">
-  📋 <span class="wl-float-count" id="wl-count">0</span>
+<button class="wl-float" id="wl-float" onclick="toggleWishlist()" aria-label="Pedir orçamento">
+  <span class="wl-float-label">📋 Pedir Orçamento</span> <span class="wl-float-count" id="wl-count" style="display:none">0</span>
 </button>
 
 <!-- ══ CTA FINAL ═══════════════════════════════════ -->
