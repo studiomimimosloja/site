@@ -291,11 +291,8 @@ function toggleFaq(btn) {
       var foot = el('div', {className:'product-foot'});
       foot.appendChild(buildPrice(p));
 
-      var wMsg = encodeURIComponent(p.whatsapp_msg || "Olá! Vim pelo site da Studio MiMimos e gostaria de saber mais sobre *" + (p.nome||'') + "*. 😊");
-      var wLink = "https://wa.me/" + WPP_NUM + "?text=" + wMsg;
-      var btnTxt = p.preco_tipo === "consulta" ? "Orçamento" : "Pedir";
-      var wppBtn = el('a', {href: wLink, className:'product-wpp', target:'_blank', rel:'noopener noreferrer'}, [createWppSvg(), document.createTextNode(' ' + btnTxt)]);
-      foot.appendChild(wppBtn);
+      // (Botão verde individual removido — agora há um único botão flutuante
+      //  "Pedir Orçamento" que envia a cestinha pro WhatsApp.)
 
       // Botão Adicionar à lista
       var precoTxt = (p.preco && p.preco_tipo !== "consulta") ? 'R$ ' + (p.promo && p.promo_preco ? p.promo_preco : p.preco) : 'Sob consulta';
@@ -390,11 +387,12 @@ function toggleFaq(btn) {
       priceWrap.appendChild(buildPrice(variants[0]));
       foot.appendChild(priceWrap);
 
-      var wMsg0 = encodeURIComponent(variants[0].whatsapp_msg || "Olá! Vim pelo site da Studio MiMimos e gostaria de saber mais sobre *" + (variants[0].nome||'') + "*. 😊");
-      var wLink0 = "https://wa.me/" + WPP_NUM + "?text=" + wMsg0;
-      var btnTxt0 = variants[0].preco_tipo === "consulta" ? "Orçamento" : "Pedir";
-      var wppBtn = el('a', {href: wLink0, className:'product-wpp', target:'_blank', rel:'noopener noreferrer'}, [createWppSvg(), document.createTextNode(' ' + btnTxt0)]);
-      foot.appendChild(wppBtn);
+      // (Botão verde individual removido — usa o botão flutuante "Pedir Orçamento".)
+      // Botão Adicionar à lista (adiciona a variação selecionada no momento)
+      var precoTxt0 = (variants[0].preco && variants[0].preco_tipo !== "consulta") ? 'R$ ' + (variants[0].promo && variants[0].promo_preco ? variants[0].promo_preco : variants[0].preco) : 'Sob consulta';
+      var wlBtn = el('button', {className:'wl-add-btn' + (isInWishlist(variants[0].nome) ? ' wl-added' : ''), textContent: isInWishlist(variants[0].nome) ? '✓ Adicionado' : '+ Adicionar'});
+      wlBtn.setAttribute('data-wl-nome', variants[0].nome || '');
+      foot.appendChild(wlBtn);
       body.appendChild(foot);
       article.appendChild(body);
 
@@ -430,12 +428,18 @@ function toggleFaq(btn) {
         while (priceWrap.firstChild) priceWrap.removeChild(priceWrap.firstChild);
         priceWrap.appendChild(buildPrice(v));
 
-        // Update WPP link
-        var wMsg = encodeURIComponent(v.whatsapp_msg || "Olá! Vim pelo site da Studio MiMimos e gostaria de saber mais sobre *" + (v.nome||'') + "*. 😊");
-        wppBtn.href = "https://wa.me/" + WPP_NUM + "?text=" + wMsg;
-        var newBtnTxt = v.preco_tipo === "consulta" ? "Orçamento" : "Pedir";
-        wppBtn.lastChild.textContent = ' ' + newBtnTxt;
+        // Atualizar o botão "+ Adicionar" para refletir a variação atual
+        wlBtn.setAttribute('data-wl-nome', v.nome || '');
+        if (isInWishlist(v.nome)) { wlBtn.classList.add('wl-added'); wlBtn.textContent = '✓ Adicionado'; }
+        else { wlBtn.classList.remove('wl-added'); wlBtn.textContent = '+ Adicionar'; }
       }
+
+      // Clique no "+ Adicionar": usa a variação selecionada no momento
+      wlBtn.addEventListener('click', function() {
+        var v = variants[currentIdx];
+        var precoTxt = (v.preco && v.preco_tipo !== "consulta") ? 'R$ ' + (v.promo && v.promo_preco ? v.promo_preco : v.preco) : 'Sob consulta';
+        addToWishlist(v.nome, precoTxt, catName);
+      });
 
       // Event listeners
       dotsWrap.addEventListener('click', function(e) {
@@ -533,7 +537,9 @@ function toggleFaq(btn) {
         renderCatalog(produtosData);
 
         // Renderizar destaques
-        renderDestaques(produtosData);
+        // LEMBRETE: desativado a pedido do Math (catálogo pequeno). Para reativar,
+        // descomente a linha abaixo e remova o display:none da seção no index.html.
+        // renderDestaques(produtosData);
 
         // Renderizar depoimentos
         renderDepoimentos(depsData);
@@ -695,9 +701,12 @@ function updateWishlistUI() {
   var itemsEl = document.getElementById('wl-items');
   var footerEl = document.getElementById('wl-footer');
 
-  // Botão flutuante
-  if (floatBtn) floatBtn.style.display = count > 0 ? 'flex' : 'none';
-  if (countEl) countEl.textContent = count;
+  // Botão flutuante sempre visível; só a bolinha de contagem aparece com itens
+  if (floatBtn) floatBtn.style.display = 'flex';
+  if (countEl) {
+    countEl.textContent = count;
+    countEl.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
 
   // Atualizar botões nos cards
   document.querySelectorAll('.wl-add-btn').forEach(function(btn) {
