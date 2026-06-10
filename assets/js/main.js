@@ -535,6 +535,7 @@ function toggleFaq(btn) {
 
         // Renderizar catálogo
         renderCatalog(produtosData);
+        renderHeroCarousel(produtosData);
 
         // Renderizar destaques
         // LEMBRETE: desativado a pedido do Math (catálogo pequeno). Para reativar,
@@ -617,6 +618,68 @@ function toggleFaq(btn) {
           });
         }
       });
+    }
+
+    function renderHeroCarousel(data) {
+      var track = document.getElementById('hero-carousel-track');
+      var dotsWrap = document.getElementById('hero-carousel-dots');
+      var carousel = document.getElementById('hero-carousel');
+      if (!track || !carousel) return;
+
+      // Coleta produtos com foto (até 6), na ordem do catálogo
+      var comFoto = [];
+      (data || []).forEach(function(p) {
+        if (p.foto_url && comFoto.length < 6) {
+          comFoto.push({ foto: p.foto_url, nome: p.nome || '' });
+        }
+      });
+
+      // Sem fotos: esconde o carrossel (não deixa espaço quebrado)
+      if (!comFoto.length) { carousel.style.display = 'none'; return; }
+
+      track.innerHTML = '';
+      dotsWrap.innerHTML = '';
+      comFoto.forEach(function(item, i) {
+        var slide = document.createElement('div');
+        slide.className = 'hero-carousel-slide' + (i === 0 ? ' active' : '');
+        var img = document.createElement('img');
+        img.src = item.foto;
+        img.alt = item.nome;
+        img.loading = 'lazy';
+        slide.appendChild(img);
+        if (item.nome) {
+          var cap = document.createElement('div');
+          cap.className = 'hcap';
+          cap.textContent = item.nome;
+          slide.appendChild(cap);
+        }
+        track.appendChild(slide);
+
+        var dot = document.createElement('span');
+        if (i === 0) dot.className = 'active';
+        dot.addEventListener('click', function() { goToSlide(i); });
+        dotsWrap.appendChild(dot);
+      });
+
+      var slides = track.querySelectorAll('.hero-carousel-slide');
+      var dots = dotsWrap.querySelectorAll('span');
+      var current = 0;
+      var timer = null;
+
+      function goToSlide(idx) {
+        slides[current].classList.remove('active');
+        if (dots[current]) dots[current].classList.remove('active');
+        current = (idx + slides.length) % slides.length;
+        slides[current].classList.add('active');
+        if (dots[current]) dots[current].classList.add('active');
+        restart();
+      }
+      function next() { goToSlide(current + 1); }
+      function restart() {
+        if (timer) clearInterval(timer);
+        timer = setInterval(next, 3500); // troca a cada 3,5s
+      }
+      if (slides.length > 1) restart();
     }
 
     function renderDestaques(data) {
