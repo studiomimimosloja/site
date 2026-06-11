@@ -65,8 +65,15 @@
 }
 .wl-float.wl-pulse{ animation:wlpulse .4s ease; }
 @keyframes wlpulse{ 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+
+/* WhatsApp flutuante: empilhado ACIMA do "Pedir Orçamento" */
+.float-wpp{
+  position:fixed !important; right:22px !important; bottom:84px !important; left:auto !important;
+  z-index:901; margin:0 !important;
+}
 @media (max-width:560px){
   .wl-float{ right:14px !important; bottom:14px !important; padding:12px 16px !important; font-size:.88rem; }
+  .float-wpp{ right:14px !important; bottom:74px !important; }
 }
 
 /* ── Carrossel de produtos no hero (preenche o espaço ao lado do título) ── */
