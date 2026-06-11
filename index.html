@@ -46,17 +46,22 @@
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/variations.css">
 <style>
-/* ── Fundo fofo: silhuetas de emojis temáticos, sutis e espalhados ── */
+/* ── Fundo fofo: silhuetas de emojis — ATRÁS de tudo, nunca sobre o conteúdo ── */
 body{ background-color:#fdfcfb; }
-/* camada do padrão SOBRE todo o site (não bloqueia cliques), presença uniforme */
-body::after{
-  content:""; position:fixed; inset:0; z-index:5; pointer-events:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Ctext x='25' y='50' font-size='28' opacity='0.08'%3E%F0%9F%8E%81%3C/text%3E%3Ctext x='140' y='80' font-size='24' opacity='0.07'%3E%F0%9F%92%9D%3C/text%3E%3Ctext x='240' y='55' font-size='22' opacity='0.08'%3E%E2%AD%90%3C/text%3E%3Ctext x='80' y='135' font-size='26' opacity='0.07'%3E%F0%9F%8E%80%3C/text%3E%3Ctext x='195' y='150' font-size='24' opacity='0.08'%3E%F0%9F%8E%88%3C/text%3E%3Ctext x='18' y='205' font-size='22' opacity='0.07'%3E%E2%9C%A8%3C/text%3E%3Ctext x='130' y='225' font-size='28' opacity='0.08'%3E%F0%9F%A7%B8%3C/text%3E%3Ctext x='250' y='215' font-size='24' opacity='0.07'%3E%F0%9F%92%96%3C/text%3E%3Ctext x='55' y='280' font-size='24' opacity='0.08'%3E%E2%AD%90%3C/text%3E%3Ctext x='180' y='285' font-size='26' opacity='0.07'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E");
+/* camada do padrão FIXA NO FUNDO (z-index 0); cards e fotos ficam por cima dela */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Ctext x='25' y='50' font-size='28' opacity='0.10'%3E%F0%9F%8E%81%3C/text%3E%3Ctext x='140' y='80' font-size='24' opacity='0.09'%3E%F0%9F%92%9D%3C/text%3E%3Ctext x='240' y='55' font-size='22' opacity='0.10'%3E%E2%AD%90%3C/text%3E%3Ctext x='80' y='135' font-size='26' opacity='0.09'%3E%F0%9F%8E%80%3C/text%3E%3Ctext x='195' y='150' font-size='24' opacity='0.10'%3E%F0%9F%8E%88%3C/text%3E%3Ctext x='18' y='205' font-size='22' opacity='0.09'%3E%E2%9C%A8%3C/text%3E%3Ctext x='130' y='225' font-size='28' opacity='0.10'%3E%F0%9F%A7%B8%3C/text%3E%3Ctext x='250' y='215' font-size='24' opacity='0.09'%3E%F0%9F%92%96%3C/text%3E%3Ctext x='55' y='280' font-size='24' opacity='0.10'%3E%E2%AD%90%3C/text%3E%3Ctext x='180' y='285' font-size='26' opacity='0.09'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E");
   background-repeat:repeat;
 }
-/* header, menus e modais ficam ACIMA do padrão (não devem ser cobertos) */
-header, .nav, .navbar, .mobile-nav, .modal, .wl-panel, .lightbox { z-index:10; position:relative; }
-/* o padrão é bem suave; sobre fotos fica quase imperceptível pela baixa opacidade */
+/* todo o conteúdo fica ACIMA do padrão */
+body > *{ position:relative; z-index:1; }
+/* faixas de fundo claro ficam transparentes pra revelar o padrão (inclui a azul) */
+section.sobre, section.como-funciona, .como-funciona, .catalogo-section,
+.destaques-section, section.faq, .faq-section, .depoimentos-section,
+section[class*="como"], main{
+  background-color:transparent !important;
+}
 /* Botão flutuante "Pedir Orçamento" — sempre visível, canto inferior direito */
 .wl-float{
   position:fixed !important; right:22px !important; bottom:22px !important; left:auto !important; z-index:900;
