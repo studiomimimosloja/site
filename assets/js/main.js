@@ -180,6 +180,64 @@ function toggleFaq(btn) {
       return priceDiv;
     }
 
+    // ── Lightbox: ampliar foto do produto ──
+    var _lbPhotos = [];
+    var _lbIdx = 0;
+    function lightboxOpen(photos, idx, nome) {
+      _lbPhotos = photos || [];
+      _lbIdx = idx || 0;
+      var box = document.getElementById('lightbox');
+      if (!box || !_lbPhotos.length) return;
+      lightboxShow();
+      box.classList.add('open');
+      box.setAttribute('aria-hidden', 'false');
+      box.setAttribute('data-nome', nome || '');
+      // setas só aparecem se tiver mais de uma foto
+      var multi = _lbPhotos.length > 1;
+      document.getElementById('lightbox-prev').style.display = multi ? 'flex' : 'none';
+      document.getElementById('lightbox-next').style.display = multi ? 'flex' : 'none';
+    }
+    function lightboxShow() {
+      var img = document.getElementById('lightbox-img');
+      var cap = document.getElementById('lightbox-caption');
+      var box = document.getElementById('lightbox');
+      if (!img) return;
+      img.src = _lbPhotos[_lbIdx];
+      img.alt = (box.getAttribute('data-nome') || '') + ' — foto ' + (_lbIdx + 1);
+      if (cap) {
+        var nome = box.getAttribute('data-nome') || '';
+        cap.textContent = _lbPhotos.length > 1 ? (nome + ' (' + (_lbIdx+1) + '/' + _lbPhotos.length + ')') : nome;
+      }
+    }
+    function lightboxClose() {
+      var box = document.getElementById('lightbox');
+      if (!box) return;
+      box.classList.remove('open');
+      box.setAttribute('aria-hidden', 'true');
+    }
+    function lightboxNav(dir) {
+      if (!_lbPhotos.length) return;
+      _lbIdx = (_lbIdx + dir + _lbPhotos.length) % _lbPhotos.length;
+      lightboxShow();
+    }
+    // Liga os controles do lightbox uma vez
+    (function setupLightbox() {
+      var box = document.getElementById('lightbox');
+      if (!box) return;
+      document.getElementById('lightbox-close').addEventListener('click', lightboxClose);
+      document.getElementById('lightbox-prev').addEventListener('click', function(e){ e.stopPropagation(); lightboxNav(-1); });
+      document.getElementById('lightbox-next').addEventListener('click', function(e){ e.stopPropagation(); lightboxNav(1); });
+      // clicar fora da imagem (no fundo) fecha
+      box.addEventListener('click', function(e){ if (e.target === box) lightboxClose(); });
+      // ESC fecha, setas navegam
+      document.addEventListener('keydown', function(e){
+        if (!box.classList.contains('open')) return;
+        if (e.key === 'Escape') lightboxClose();
+        else if (e.key === 'ArrowLeft') lightboxNav(-1);
+        else if (e.key === 'ArrowRight') lightboxNav(1);
+      });
+    })();
+
     // ── Helper: pegar todas as fotos de um produto ──
     function getPhotos(p) {
       var photos = [];
@@ -202,7 +260,9 @@ function toggleFaq(btn) {
       }
 
       if (photos.length === 1) {
-        imgDiv.appendChild(el('img', {src: photos[0], alt: altText || '', loading:'lazy'}));
+        var single = el('img', {src: photos[0], alt: altText || '', loading:'lazy'});
+        single.addEventListener('click', function(){ lightboxOpen(photos, 0, altText); });
+        imgDiv.appendChild(single);
         return { imgDiv: imgDiv, goTo: null };
       }
 
@@ -214,7 +274,9 @@ function toggleFaq(btn) {
 
       photos.forEach(function(src, si) {
         var slide = el('div', {className:'var-slide' + (si === 0 ? ' active' : '')});
-        slide.appendChild(el('img', {src: src, alt: (altText || '') + ' — foto ' + (si+1), loading:'lazy'}));
+        var slideImg = el('img', {src: src, alt: (altText || '') + ' — foto ' + (si+1), loading:'lazy'});
+        slideImg.addEventListener('click', function(){ lightboxOpen(photos, currentIdx, altText); });
+        slide.appendChild(slideImg);
         track.appendChild(slide);
 
         var dot = el('button', {className:'var-dot' + (si === 0 ? ' active' : '')});
@@ -315,10 +377,16 @@ function toggleFaq(btn) {
       var track = el('div', {className:'var-carousel-track'});
       var dotsWrap = el('div', {className:'var-carousel-dots'});
 
+      var _varFotos = variants.map(function(v){ return v.foto_url; }).filter(Boolean);
       variants.forEach(function(v, vi) {
         var slide = el('div', {className:'var-slide' + (vi === 0 ? ' active' : '')});
         if (v.foto_url) {
-          slide.appendChild(el('img', {src: v.foto_url, alt: v.nome || '', loading:'lazy'}));
+          var vImg = el('img', {src: v.foto_url, alt: v.nome || '', loading:'lazy'});
+          vImg.addEventListener('click', function(){
+            var idx = _varFotos.indexOf(v.foto_url);
+            lightboxOpen(_varFotos, idx < 0 ? 0 : idx, v.nome || '');
+          });
+          slide.appendChild(vImg);
         } else {
           slide.appendChild(el('div', {className:'product-img-ph'}, [el('span', {textContent:'foto em breve'})]));
         }
@@ -524,6 +592,9 @@ function toggleFaq(btn) {
         var produtosData = results[1] || [];
         var depsData = results[2] || [];
 
+        // guarda os produtos para reordenar quando o cliente trocar a ordenação
+        window._catalogoProdutos = produtosData;
+
         // Processar badges
         if (badgesData.length) {
           badgesData.forEach(function(b) {
@@ -533,8 +604,8 @@ function toggleFaq(btn) {
           BADGE_STYLES = BADGE_FALLBACK;
         }
 
-        // Renderizar catálogo
-        renderCatalog(produtosData);
+        // Renderizar catálogo (na ordem escolhida, padrão = tradicional)
+        renderCatalog(ordenarProdutos(produtosData, window._ordemCatalogo || 'tradicional'));
         renderHeroCarousel(produtosData);
 
         // Renderizar destaques
@@ -545,6 +616,60 @@ function toggleFaq(btn) {
         // Renderizar depoimentos
         renderDepoimentos(depsData);
       });
+    }
+
+    // Extrai um número de preço para ordenação. Sob consulta / sem preço => null
+    function precoOrdenacao(p) {
+      // preço por faixa: usa o menor preço das faixas
+      var pf = p.precos_faixa;
+      if (typeof pf === "string") { try { pf = JSON.parse(pf); } catch(e) { pf = null; } }
+      if (pf && pf.ativo && pf.faixas && pf.faixas.length) {
+        var precos = pf.faixas.map(function(f){ return parseFloat(String(f.preco).replace(',', '.')); })
+                              .filter(function(n){ return !isNaN(n); });
+        if (precos.length) return Math.min.apply(null, precos);
+      }
+      // sob consulta ou sem preço => null (vai pro fim)
+      if (!p.preco || p.preco_tipo === "consulta") return null;
+      var v = parseFloat(String(p.preco).replace(/\./g, '').replace(',', '.'));
+      return isNaN(v) ? null : v;
+    }
+
+    // Ordena a lista de produtos conforme o modo escolhido
+    function ordenarProdutos(data, modo) {
+      var arr = (data || []).slice();
+      function semPrecoVaiProFim(a, b, cmp) {
+        var pa = precoOrdenacao(a), pb = precoOrdenacao(b);
+        if (pa === null && pb === null) return 0;
+        if (pa === null) return 1;   // a sem preço -> fim
+        if (pb === null) return -1;  // b sem preço -> fim
+        return cmp(pa, pb);
+      }
+      if (modo === 'preco-asc') {
+        arr.sort(function(a, b){ return semPrecoVaiProFim(a, b, function(x, y){ return x - y; }); });
+      } else if (modo === 'preco-desc') {
+        arr.sort(function(a, b){ return semPrecoVaiProFim(a, b, function(x, y){ return y - x; }); });
+      } else if (modo === 'alfabetica') {
+        arr.sort(function(a, b){ return String(a.nome||'').localeCompare(String(b.nome||''), 'pt-BR'); });
+      } else if (modo === 'novidades') {
+        arr.sort(function(a, b){
+          return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        });
+      }
+      // 'tradicional' = mantém a ordem que veio do banco (ordem.asc)
+      return arr;
+    }
+
+    // Troca a ordenação e re-renderiza o catálogo
+    function mudarOrdem(modo) {
+      window._ordemCatalogo = modo;
+      var dados = window._catalogoProdutos || [];
+      // qual aba está ativa, pra manter o cliente na mesma categoria
+      var ativa = document.querySelector('.cat-section.active');
+      renderCatalog(ordenarProdutos(dados, modo));
+      if (ativa && ativa.id) {
+        var tabBtn = document.querySelector('[aria-controls="' + ativa.id + '"]');
+        if (tabBtn) showCat(ativa.id, tabBtn);
+      }
     }
 
     function renderCatalog(data) {
