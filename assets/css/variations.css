@@ -49,9 +49,9 @@
 }
 
 .hero-v2 h1 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--serif);
   font-size: clamp(2rem, 5vw, 3.2rem);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.15;
   margin: 0 0 16px;
 }
@@ -59,6 +59,19 @@
 .hero-v2 h1 em {
   color: #2ECFC4;
   font-style: italic;
+}
+
+/* Assinatura manuscrita — "etiqueta personalizada" escrita à mão */
+.hero-v2 h1 em.hand-accent {
+  font-family: var(--hand);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 1.35em;
+  color: #2ECFC4;
+  display: inline-block;
+  transform: rotate(-3deg);
+  line-height: 1;
+  padding: 0 .1em;
 }
 
 .hero-v2-text p {
@@ -100,7 +113,7 @@
 }
 
 .hero-v2-stat-num {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--serif);
   font-size: 1.5rem;
   font-weight: 600;
   color: white;
@@ -133,27 +146,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 24px 12px;
-  border-radius: 14px;
+  gap: 12px;
+  padding: 26px 12px;
+  border-radius: 16px;
   background: white;
-  border: 1.5px solid #f0eeeb;
+  border: 1px solid var(--line);
   text-decoration: none;
-  color: #1a1a2e;
-  transition: all .25s;
+  color: var(--dark);
+  transition: all .25s var(--ease);
   cursor: pointer;
 }
 
 .hero-cat-card:hover {
-  border-color: #2ECFC4;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(46,207,196,.12);
+  border-color: var(--teal);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(46,207,196,.14);
 }
 
 .hero-cat-icon {
-  font-size: 2rem;
+  width: 30px;
+  height: 30px;
   line-height: 1;
+  color: var(--purple);
+  transition: color .25s, transform .25s;
 }
+.hero-cat-icon svg { width: 100%; height: 100%; }
+.hero-cat-card:hover .hero-cat-icon { color: var(--teal-d); transform: translateY(-2px); }
 
 .hero-cat-name {
   font-size: .82rem;
