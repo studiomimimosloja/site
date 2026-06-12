@@ -348,7 +348,7 @@ footer{background:#111122;color:rgba(255,255,255,.4);padding:52px 5vw 32px}
 .info-section{padding:64px 20px;background:white}
 .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:900px;margin:40px auto 0}
 .info-card{padding:24px;background:var(--cream);border-radius:var(--r);border:1px solid var(--line);text-align:center}
-.info-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;border-radius:13px;background:var(--teal-l);color:var(--teal-d)}
+.info-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;border-radius:13px;background:var(--teal-l);color:var(--teal-d)}
 .info-icon svg{width:24px;height:24px}
 .info-card h3{font-size:.95rem;font-weight:600;color:var(--dark);margin-bottom:6px}
 .info-card p{font-size:.85rem;color:var(--mid);line-height:1.6}
