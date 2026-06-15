@@ -146,9 +146,10 @@ section{padding:80px 5vw}
 
 /* ══ COMO FUNCIONA ═══════════════════════════════ */
 .como{background:var(--teal-l)}
-.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:40px}
-.step{text-align:center;padding:24px 16px;background:var(--white);border-radius:var(--r);border:1.5px solid rgba(46,207,196,.15);position:relative}
-.step::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--teal);font-size:1.1rem;z-index:2}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:40px}
+.step{text-align:center;padding:22px 12px;background:var(--white);border-radius:var(--r);border:1.5px solid rgba(46,207,196,.15);position:relative}
+.step::after{content:'→';position:absolute;right:-10px;top:50%;transform:translateY(-50%);color:var(--teal);font-size:1rem;z-index:2}
+.step:last-child::after{display:none}
 .step:last-child::after{display:none}
 .step-num{width:40px;height:40px;background:var(--teal);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.1rem;font-weight:600;margin:0 auto 12px}
 .step h3{font-size:.88rem;font-weight:600;margin-bottom:6px;color:var(--dark)}
@@ -294,6 +295,8 @@ footer{background:#111122;color:rgba(255,255,255,.4);padding:52px 5vw 32px}
   .ig-mockup{display:none}
   .faq-grid{grid-template-columns:1fr;gap:32px}
   .footer-top{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:repeat(3,1fr);gap:14px}
+  .step::after{display:none}
 }
 @media(max-width:768px){
   section{padding:60px 5vw}
