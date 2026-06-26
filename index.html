@@ -51,8 +51,8 @@ body{ background-color:var(--bg); }
 /* pontinhos sutis, como papel pontilhado — atrás de tudo, nunca sobre o conteúdo */
 body::before{
   content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
-  background-image:radial-gradient(circle, rgba(139,107,177,.10) 1.1px, transparent 1.1px);
-  background-size:26px 26px;
+  background-image:radial-gradient(circle, rgba(139,107,177,.06) 1.1px, transparent 1.1px);
+  background-size:28px 28px;
 }
 /* ── Avisos do topo do catálogo ── */
 .cat-avisos{
@@ -61,18 +61,17 @@ body::before{
 }
 .cat-aviso{
   display:flex; align-items:center; gap:15px; flex:1; min-width:300px;
-  background:linear-gradient(120deg, var(--teal-l) 0%, var(--purple-l) 100%);
-  border:1.5px solid var(--teal);
+  background:#fff;
+  border:1px solid var(--line);
   border-radius:16px; padding:18px 22px;
-  box-shadow:0 6px 22px rgba(46,207,196,.16);
+  box-shadow:var(--shadow);
   transition:transform .2s var(--ease), box-shadow .2s var(--ease);
 }
-.cat-aviso:hover{ transform:translateY(-3px); box-shadow:0 12px 30px rgba(46,207,196,.24); }
+.cat-aviso:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
 .cat-aviso-ico{
-  width:46px; height:46px; flex-shrink:0; border-radius:50%;
+  width:44px; height:44px; flex-shrink:0; border-radius:12px;
   display:flex; align-items:center; justify-content:center;
-  background:var(--teal); color:#fff;
-  box-shadow:0 4px 12px rgba(46,207,196,.35);
+  background:var(--teal-l); color:var(--teal-d);
 }
 .cat-aviso-ico svg{ width:24px; height:24px; }
 .cat-aviso strong{ display:block; font-size:1.05rem; font-weight:700; color:var(--dark); margin-bottom:3px; }
@@ -140,16 +139,11 @@ body::before{
 }
 /* todo o conteúdo fica ACIMA do padrão */
 body > *{ position:relative; z-index:1; }
-/* faixas de fundo claro ficam transparentes pra revelar o padrão (inclui a azul) */
-section.sobre, section.como-funciona, .como-funciona, .catalogo-section,
-.destaques-section, section.faq, .faq-section, .depoimentos-section,
-section[class*="como"], main{
-  background-color:transparent !important;
-}
+/* (Removido: regra que tornava seções transparentes — agora usamos color-blocking real entre seções.) */
 /* Botão flutuante "Pedir Orçamento" — sempre visível, canto inferior direito */
 .wl-float{
   position:fixed !important; right:22px !important; bottom:22px !important; left:auto !important; z-index:900;
-  display:inline-flex !important; align-items:center; gap:8px;
+  display:inline-flex !important; align-items:center; gap:9px;
   width:auto !important; max-width:max-content !important;
   background:#2ECFC4; color:#0d2b29; border:none;
   padding:14px 20px !important; border-radius:999px; cursor:pointer;
@@ -157,6 +151,8 @@ section[class*="como"], main{
   box-shadow:0 8px 24px rgba(46,207,196,.45);
   transition:transform .15s ease, box-shadow .15s ease;
 }
+.wl-float svg{ width:18px; height:18px; flex-shrink:0; }
+.wl-float-label{ display:inline-flex; align-items:center; gap:8px; }
 .wl-float:hover{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(46,207,196,.55); }
 .wl-float-count{
   background:#1a1a2e; color:#fff; min-width:22px; height:22px; padding:0 6px;
@@ -179,10 +175,8 @@ section[class*="como"], main{
 /* ── Carrossel de produtos no hero (preenche o espaço ao lado do título) ── */
 .hero-v2-inner{ position:relative; }
 .hero-carousel{
-  position:absolute; top:50%; right:0; transform:translateY(-50%);
-  width:40%; max-width:420px;
-  aspect-ratio:1/1; border-radius:24px; overflow:hidden;
-  box-shadow:0 20px 60px rgba(0,0,0,.35); z-index:2;
+  position:relative; width:100%; margin:0;
+  aspect-ratio:4/5; border-radius:12px; overflow:hidden; z-index:2;
 }
 .hero-carousel-track{ position:relative; width:100%; height:100%; }
 .hero-carousel-slide{
@@ -211,10 +205,7 @@ section[class*="como"], main{
 }
 @keyframes hcGlow{ 0%,100%{border-color:rgba(46,207,196,.0)} 50%{border-color:rgba(46,207,196,.5)} }
 @media (max-width:900px){
-  .hero-carousel{
-    position:relative; top:auto; right:auto; transform:none;
-    width:100%; max-width:340px; margin:24px auto 0;
-  }
+  .hero-frame{ max-width:340px; }
 }
 </style>
 </head>
@@ -228,8 +219,11 @@ section[class*="como"], main{
 <!-- ══ HEADER ════════════════════════════════════ -->
 <header id="header" role="banner">
   <a href="#" class="logo-wrap" aria-label="Studio MiMimos — Página inicial">
-    <img src="assets/img/logo-2.png" alt="Studio MiMimos" style="height:64px;width:auto;" aria-hidden="true">
-    <span class="logo-name">Studio <span>MiMimos</span></span>
+    <img src="assets/img/logo-2.png" alt="Studio MiMimos" style="height:52px;width:auto;" aria-hidden="true">
+    <span class="logo-lock">
+      <span class="logo-name">Studio <span>MiMimos</span></span>
+      <span class="logo-tagline">feitos pra você</span>
+    </span>
   </a>
   <div class="nav-links" role="navigation" aria-label="Menu principal">
     <a href="#sobre">Sobre</a>
@@ -266,22 +260,31 @@ section[class*="como"], main{
     <div class="hero-v2-text">
       <div class="hero-v2-tag">Studio MiMimos · Fortaleza, CE</div>
       <h1>Mimos e lembrancinhas<br><em class="hand-accent">feitos pra você</em></h1>
-      <p>Personalizamos com nome, tema e cores. Lembrancinhas de aniversário, presentes, impressão 3D e muito mais.</p>
+      <p>Personalizamos com nome, tema e cores — pra cada aniversário, presente ou data que merece um cuidado a mais. Inclusive em impressão 3D.</p>
       <div class="hero-v2-actions">
         <a href="https://wa.me/5585997327204?text=Ol%C3%A1%21%20Vi%20o%20site%20do%20Studio%20MiMimos%20e%20gostaria%20de%20fazer%20um%20or%C3%A7amento.%20%F0%9F%98%8A" class="btn btn-wpp" target="_blank" rel="noopener noreferrer">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Pedir orçamento
         </a>
-        <a href="#catalogo" class="btn btn-outline">Ver catálogo ↓</a>
+        <a href="#catalogo" class="btn btn-outline">Ver catálogo</a>
       </div>
-    </div>
-    <div class="hero-v2-stats">
+      <div class="hero-v2-stats">
       <div class="hero-v2-stat"><span class="hero-v2-stat-num">100%</span><span class="hero-v2-stat-label">Personalizado</span></div>
       <div class="hero-v2-stat"><span class="hero-v2-stat-num">500+</span><span class="hero-v2-stat-label">Pedidos entregues</span></div>
       <div class="hero-v2-stat"><span class="hero-v2-stat-num"><svg viewBox="0 0 24 24" fill="currentColor" style="width:1em;height:1em;display:inline-block;vertical-align:-2px;color:#F5C451"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7L12 2Z"/></svg> 5.0</span><span class="hero-v2-stat-label">Avaliação</span></div>
+      </div>
     </div>
-    <div class="hero-carousel" id="hero-carousel" aria-label="Nossos produtos">
-      <div class="hero-carousel-track" id="hero-carousel-track"></div>
-      <div class="hero-carousel-dots" id="hero-carousel-dots"></div>
+    <div class="hero-art">
+      <div class="hero-frame">
+        <span class="washi washi-l"></span>
+        <span class="washi washi-r"></span>
+        <span class="bow" aria-hidden="true"><svg class="bow-svg" viewBox="0 0 100 74"><path class="bow-fill" d="M48,39 C46,50 42,60 36,70 L42,66 L47,71 C48,60 49,50 50,40 Z"/><path class="bow-fill" d="M52,39 C54,50 58,60 64,70 L58,66 L53,71 C52,60 51,50 50,40 Z"/><path class="bow-fill" d="M50,35 C33,12 5,11 6,29 C7,43 33,40 50,38 Z"/><path class="bow-fill" d="M50,35 C67,12 95,11 94,29 C93,43 67,40 50,38 Z"/><path class="bow-shade" d="M50,38 C45,38 40,38.6 35,40 C40,36.5 45,36.5 50,36.5 C55,36.5 60,36.5 65,40 C60,38.6 55,38 50,38 Z"/><path class="bow-shine" d="M50,34 C37,18 16,17 11,26"/><path class="bow-shine" d="M50,34 C63,18 84,17 89,26"/><rect class="bow-knot-svg" x="44" y="30" width="12" height="14" rx="4.5"/></svg></span>
+        <div class="hero-carousel" id="hero-carousel" aria-label="Nossos produtos">
+          <div class="hero-carousel-track" id="hero-carousel-track"></div>
+          <div class="hero-carousel-dots" id="hero-carousel-dots"></div>
+          <span class="hero-chip"><span class="hero-chip-dot"></span>Feito à mão</span>
+        </div>
+      </div>
+      <div class="hero-note">com todo o<br><em>carinho</em></div>
     </div>
   </div>
 </section>
@@ -676,7 +679,7 @@ section[class*="como"], main{
   <div class="wl-overlay" onclick="toggleWishlist()"></div>
   <div class="wl-content">
     <div class="wl-header">
-      <h3>📋 Minha lista de pedidos</h3>
+      <h3><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;vertical-align:-3px;margin-right:7px;color:var(--teal-d)"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1Z"/><path d="M8 6H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2"/><path d="M9 12h6M9 16h4"/></svg>Minha lista de pedidos</h3>
       <button class="wl-close" onclick="toggleWishlist()" aria-label="Fechar">✕</button>
     </div>
     <div class="wl-body" id="wl-items">
@@ -693,14 +696,14 @@ section[class*="como"], main{
 
 <!-- Botão flutuante da lista -->
 <button class="wl-float" id="wl-float" onclick="toggleWishlist()" aria-label="Pedir orçamento">
-  <span class="wl-float-label">📋 Pedir Orçamento</span> <span class="wl-float-count" id="wl-count" style="display:none">0</span>
+  <span class="wl-float-label"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1Z"/><path d="M8 6H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2"/><path d="M9 12h6M9 16h4"/></svg>Pedir Orçamento</span> <span class="wl-float-count" id="wl-count" style="display:none">0</span>
 </button>
 
 <!-- ══ LIGHTBOX (foto ampliada) ════════════════════ -->
 <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="Foto ampliada">
   <button class="lightbox-close" id="lightbox-close" aria-label="Fechar">&times;</button>
   <button class="lightbox-arrow lightbox-prev" id="lightbox-prev" aria-label="Foto anterior">&#8249;</button>
-  <img class="lightbox-img" id="lightbox-img" src="" alt="">
+  <img class="lightbox-img" id="lightbox-img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
   <button class="lightbox-arrow lightbox-next" id="lightbox-next" aria-label="Próxima foto">&#8250;</button>
   <div class="lightbox-caption" id="lightbox-caption"></div>
 </div>
@@ -708,6 +711,16 @@ section[class*="como"], main{
 <!-- ══ CTA FINAL ═══════════════════════════════════ -->
 <section class="cta-final" aria-labelledby="cta-title">
   <div class="cta-inner reveal">
+    <span class="bow bow--rose" aria-hidden="true"><svg class="bow-svg" viewBox="0 0 100 74"><path class="bow-fill" d="M48,39 C46,50 42,60 36,70 L42,66 L47,71 C48,60 49,50 50,40 Z"/><path class="bow-fill" d="M52,39 C54,50 58,60 64,70 L58,66 L53,71 C52,60 51,50 50,40 Z"/><path class="bow-fill" d="M50,35 C33,12 5,11 6,29 C7,43 33,40 50,38 Z"/><path class="bow-fill" d="M50,35 C67,12 95,11 94,29 C93,43 67,40 50,38 Z"/><path class="bow-shade" d="M50,38 C45,38 40,38.6 35,40 C40,36.5 45,36.5 50,36.5 C55,36.5 60,36.5 65,40 C60,38.6 55,38 50,38 Z"/><path class="bow-shine" d="M50,34 C37,18 16,17 11,26"/><path class="bow-shine" d="M50,34 C63,18 84,17 89,26"/><rect class="bow-knot-svg" x="44" y="30" width="12" height="14" rx="4.5"/></svg></span>
+    <div class="box-dieline" aria-hidden="true">
+      <span class="bd-tab bd-tab--top"></span>
+      <span class="bd-tab bd-tab--bottom"></span>
+      <span class="bd-corner bd-corner--tl"></span>
+      <span class="bd-corner bd-corner--tr"></span>
+      <span class="bd-corner bd-corner--bl"></span>
+      <span class="bd-corner bd-corner--br"></span>
+      <span class="bd-note">recorte · dobre · monte</span>
+    </div>
     <div class="eyebrow" style="color:var(--teal)">Faça seu pedido</div>
     <h2 id="cta-title">Quer fazer uma<br><em>encomenda?</em></h2>
     <p>Mande uma mensagem pelo WhatsApp com o que você precisa. Respondemos rápido e ajudamos em tudo.</p>
@@ -783,7 +796,6 @@ section[class*="como"], main{
       <a href="#catalogo">Catálogo</a>
       <a href="#depoimentos">Depoimentos</a>
       <a href="#faq">FAQ</a>
-      <a href="#catalogo">Catálogo</a>
     </div>
     <div class="footer-col">
       <h4>Categorias</h4>
