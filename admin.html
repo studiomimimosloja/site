@@ -175,8 +175,10 @@ tr:hover td{background:var(--bg)}
     <button class="ni" onclick="showP('faqs',this)">❓ FAQ</button>
     <button class="ni" onclick="showP('banners',this)">🎯 Banners</button>
     <button class="ni" onclick="showP('badges',this)">🏷️ Badges</button>
-    <button class="ni" onclick="showP('cal',this)">📅 Calendário</button>
-    <button class="ni" onclick="showP('erp',this)">📊 ERP / Estoque</button>
+    <!-- Abas ocultadas a pedido do Math (ERP é operado pelo bot do Telegram).
+         Para REATIVAR, remova o style="display:none" dos dois botões abaixo. -->
+    <button class="ni" style="display:none" onclick="showP('cal',this)">📅 Calendário</button>
+    <button class="ni" style="display:none" onclick="showP('erp',this)">📊 ERP / Estoque</button>
     <button class="ni" onclick="showP('pedidos',this)">📋 Pedidos</button>
     <button class="ni" onclick="showP('clientes',this)">👥 Clientes</button>
     <button class="ni" onclick="showP('relatorio',this)">📈 Relatório</button>
