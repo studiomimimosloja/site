@@ -134,6 +134,15 @@ function precoLbl(p) {
   return p.preco ? "R$ " + p.preco : "\u2014";
 }
 
+function alertaCat(p) {
+  if (!(genericData.cats||[]).length) return '';
+  var existe = catsPrincipais().some(function(c){ return c.nome === p.categoria; });
+  if (!existe) return ' <span style="color:#dc2626;font-weight:700" title="Essa categoria não existe no painel — o produto não aparece no site">⚠ categoria inexistente</span>';
+  if (p.subcategoria && !subcatsDe(p.categoria).some(function(c){ return c.nome === p.subcategoria; }))
+    return ' <span style="color:#b9740f;font-weight:700" title="Subcategoria não cadastrada — o produto só aparece em Todos">⚠ subcategoria não cadastrada</span>';
+  return '';
+}
+
 function render() {
   var q = (document.getElementById("q").value || "").toLowerCase();
   var cat = document.getElementById("fc").value;
@@ -153,7 +162,7 @@ function render() {
     var stc = p.status === "Ativo" ? "sp-a" : p.status === "Oculto" ? "sp-o" : "sp-e";
     var dc = p.status === "Ativo" ? "sd-a" : p.status === "Oculto" ? "sd-o" : "sd-e";
     var prm = p.promo && p.promo_preco ? '<div style="font-size:.7rem;color:var(--a);font-weight:600">&#127991; R$ ' + esc(p.promo_preco) + '</div>' : '';
-    return '<tr><td><div class="pi">' + foto + '<div><div class="pn">' + esc(p.nome) + '</div><div class="pc">' + esc(p.categoria||"") + '</div>' + varLabel + '</div></div></td>'
+    return '<tr><td><div class="pi">' + foto + '<div><div class="pn">' + esc(p.nome) + '</div><div class="pc">' + esc(p.categoria||"") + (p.subcategoria ? ' › ' + esc(p.subcategoria) : '') + alertaCat(p) + '</div>' + varLabel + '</div></div></td>'
       + '<td>' + precoLbl(p) + prm + '</td><td>' + bdg + '</td>'
       + '<td><span class="sp ' + stc + '"><span class="sd ' + dc + '"></span>' + p.status + '</span></td>'
       + '<td><div class="ac">'
@@ -173,6 +182,7 @@ function openM() {
   ["fn","fcat","fsubcat","fbdg","fpr","fpt","fd","fwpp","fsts","ford","fpp","fptx","fgrupo","fvar"].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = "";
   });
+  setCategoriaProduto("", "");
   document.getElementById("fbdg").value = "Nenhum";
   document.getElementById("fpt").value = "fixo";
   document.getElementById("fsts").value = "Ativo";
@@ -201,8 +211,7 @@ function editP(id) {
     document.getElementById("fui").style.display = "block";
   }
   document.getElementById("fn").value = p.nome || "";
-  document.getElementById("fcat").value = p.categoria || "";
-  document.getElementById("fsubcat").value = p.subcategoria || "";
+  setCategoriaProduto(p.categoria || "", p.subcategoria || "");
   document.getElementById("fbdg").value = p.badge || "Nenhum";
   document.getElementById("fpr").value = p.preco || "";
   document.getElementById("fpt").value = p.preco_tipo || "fixo";
@@ -471,6 +480,7 @@ function loadGeneric(section) {
     var cnt = document.getElementById(section + "-cnt");
     if (cnt) cnt.textContent = "(" + (data||[]).length + ")";
     if (section === "badges") refreshBadgeDropdown();
+    if (section === "cats") { refreshCatDropdowns(); if (typeof render === "function" && produtos.length) render(); }
   }).catch(function(e) { toast("Erro ao carregar " + cfg.label + ": " + e.message, "err"); });
 }
 
@@ -504,6 +514,7 @@ loadAll = function() {
 // ── RENDER ──
 function renderGeneric(section) {
   var data = genericData[section] || [];
+  if (section === "cats") data = categoriasEmArvore(data);
   var tb = document.getElementById(section + "-tbody");
   if (!tb) return;
 
@@ -522,7 +533,10 @@ function renderGeneric(section) {
       + '</div>';
 
     if (section === "cats") {
-      return '<tr><td><strong>' + esc(item.nome) + '</strong></td><td>' + esc(item.descricao||'—') + '</td><td>' + (item.ordem||0) + '</td><td>' + st + '</td><td>' + actions + '</td></tr>';
+      var nomeCel = item.parent_id
+        ? '<span style="color:var(--sf);margin:0 6px 0 14px">↳</span>' + esc(item.nome) + ' <span style="font-size:.7rem;color:var(--sf)">subcategoria</span>'
+        : '<strong>' + esc(item.nome) + '</strong>';
+      return '<tr><td>' + nomeCel + '</td><td>' + esc(item.descricao||'—') + '</td><td>' + (item.ordem||0) + '</td><td>' + st + '</td><td>' + actions + '</td></tr>';
     }
     if (section === "deps") {
       var stars = '★'.repeat(item.nota||5) + '☆'.repeat(5-(item.nota||5));
@@ -561,6 +575,7 @@ var FORM_FIELDS = {
   cats: [
     { id: 'g-nome', label: 'Nome da categoria *', type: 'text', field: 'nome', required: true },
     { id: 'g-desc', label: 'Descrição curta', type: 'textarea', field: 'descricao' },
+    { id: 'g-pai', label: 'É subcategoria de', type: 'select', field: 'parent_id', optsFn: opcoesCategoriaPai },
     { id: 'g-ordem', label: 'Ordem', type: 'number', field: 'ordem', def: '0' },
     { id: 'g-status', label: 'Status', type: 'select', field: 'status', opts: ['Ativa','Oculta'], def: 'Ativa' }
   ],
@@ -609,6 +624,88 @@ var FORM_FIELDS = {
   ]
 };
 
+// ════════════════════════════════════════════════════
+// CATEGORIAS E SUBCATEGORIAS (fonte única: tabela "categorias")
+// ════════════════════════════════════════════════════
+function catsPrincipais() {
+  return (genericData.cats||[]).filter(function(c){ return !c.parent_id; })
+    .sort(function(a,b){ return (a.ordem||0)-(b.ordem||0) || (a.nome||'').localeCompare(b.nome||''); });
+}
+function subcatsDe(nomeCat) {
+  var mae = catsPrincipais().find(function(c){ return c.nome === nomeCat; });
+  if (!mae) return [];
+  return (genericData.cats||[]).filter(function(c){ return c.parent_id == mae.id; })
+    .sort(function(a,b){ return (a.ordem||0)-(b.ordem||0) || (a.nome||'').localeCompare(b.nome||''); });
+}
+function categoriasEmArvore(lista) {
+  var out = [];
+  var maes = lista.filter(function(c){ return !c.parent_id; });
+  maes.forEach(function(m) {
+    out.push(m);
+    lista.filter(function(c){ return c.parent_id == m.id; }).forEach(function(f){ out.push(f); });
+  });
+  lista.forEach(function(c){ if (out.indexOf(c) < 0) out.push(c); }); // órfãs (segurança)
+  return out;
+}
+function opcoesCategoriaPai(item) {
+  var opts = [{ v: '', l: '— Nenhuma (categoria principal)' }];
+  // categoria que já tem subcategorias não pode virar subcategoria (só 2 níveis)
+  var temFilhas = item && (genericData.cats||[]).some(function(c){ return c.parent_id == item.id; });
+  if (temFilhas) return opts;
+  catsPrincipais().forEach(function(c) {
+    if (!item || c.id != item.id) opts.push({ v: c.id, l: c.nome });
+  });
+  return opts;
+}
+function preencherSelect(sel, opcoes, valor, extraSeFaltar) {
+  if (!sel) return;
+  while (sel.options.length > 1) sel.remove(1);
+  opcoes.forEach(function(n) {
+    var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o);
+  });
+  if (valor && opcoes.indexOf(valor) < 0 && extraSeFaltar) {
+    var o2 = document.createElement('option'); o2.value = valor; o2.textContent = valor + ' ' + extraSeFaltar; sel.appendChild(o2);
+  }
+  sel.value = valor || '';
+}
+function refreshCatDropdowns() {
+  var nomes = catsPrincipais().map(function(c){ return c.nome; });
+  var fc = document.getElementById('fc');
+  preencherSelect(fc, nomes, fc ? fc.value : '', null);
+  var fcat = document.getElementById('fcat');
+  var atual = fcat ? fcat.value : '';
+  preencherSelect(fcat, nomes, atual, '(não existe mais)');
+  atualizarSubcats(document.getElementById('fsubcat') ? document.getElementById('fsubcat').value : '');
+}
+function atualizarSubcats(valor) {
+  var cat = (document.getElementById('fcat')||{}).value || '';
+  var nomes = subcatsDe(cat).map(function(c){ return c.nome; });
+  preencherSelect(document.getElementById('fsubcat'), nomes, valor, '(não cadastrada)');
+}
+function setCategoriaProduto(cat, sub) {
+  var nomes = catsPrincipais().map(function(c){ return c.nome; });
+  preencherSelect(document.getElementById('fcat'), nomes, cat, '(não existe mais)');
+  atualizarSubcats(sub);
+}
+// Renomeou/moveu uma categoria? Atualiza os produtos que usam ela.
+function propagarCategoria(antes, depois) {
+  var enc = encodeURIComponent;
+  var cats = genericData.cats || [];
+  var paiAntes = antes.parent_id ? cats.find(function(c){ return c.id == antes.parent_id; }) : null;
+  var paiDepois = depois.parent_id ? cats.find(function(c){ return c.id == depois.parent_id; }) : null;
+  var reqs = [];
+  if (!paiAntes && !paiDepois && antes.nome !== depois.nome) {
+    // categoria principal renomeada
+    reqs.push(supa("PATCH", "produtos?categoria=eq." + enc(antes.nome), { categoria: depois.nome }));
+  } else if (paiAntes && paiDepois && (antes.nome !== depois.nome || paiAntes.id !== paiDepois.id)) {
+    // subcategoria renomeada e/ou movida para outra categoria
+    reqs.push(supa("PATCH", "produtos?categoria=eq." + enc(paiAntes.nome) + "&subcategoria=eq." + enc(antes.nome),
+      { categoria: paiDepois.nome, subcategoria: depois.nome }));
+  }
+  if (!reqs.length) return Promise.resolve();
+  return Promise.all(reqs).then(function() { if (typeof loadAll === "function") loadAll(); });
+}
+
 function openModal(section, editId) {
   currentSection = section;
   currentEditId = editId || "";
@@ -638,9 +735,12 @@ function openModal(section, editId) {
       html += '<textarea class="fx ft" id="' + f.id + '">' + esc(val+'') + '</textarea>';
     } else if (f.type === 'select') {
       html += '<select class="fx" id="' + f.id + '">';
-      (f.opts||[]).forEach(function(o) {
-        var sel = (val+'' === o+'') ? ' selected' : '';
-        html += '<option value="' + o + '"' + sel + '>' + (o||'Selecione...') + '</option>';
+      var opcoes = f.optsFn ? f.optsFn(item) : (f.opts||[]);
+      opcoes.forEach(function(o) {
+        var ov = (o && typeof o === 'object') ? o.v : o;
+        var ol = (o && typeof o === 'object') ? o.l : o;
+        var sel = (val+'' === ov+'') ? ' selected' : '';
+        html += '<option value="' + esc(ov+'') + '"' + sel + '>' + esc(ol||'Selecione...') + '</option>';
       });
       html += '</select>';
     } else if (f.type === 'checkbox') {
@@ -735,6 +835,16 @@ function saveGeneric() {
 
   if (hasError) return;
 
+  var antes = null;
+  if (currentSection === "cats") {
+    obj.parent_id = obj.parent_id ? parseInt(obj.parent_id) : null;
+    antes = currentEditId ? (genericData.cats||[]).find(function(x){ return x.id == currentEditId; }) : null;
+    var dup = (genericData.cats||[]).some(function(x){
+      return x.id != currentEditId && (x.parent_id||null) === obj.parent_id && (x.nome||'').toLowerCase() === (obj.nome||'').toLowerCase();
+    });
+    if (dup) { toast("Já existe uma categoria com esse nome nesse nível.", "err"); return; }
+  }
+
   var svBtn = document.getElementById("gen-save");
   svBtn.textContent = "Salvando...";
   svBtn.disabled = true;
@@ -754,6 +864,8 @@ function saveGeneric() {
 
     if (currentEditId) {
       return supa("PATCH", cfg.table + "?id=eq." + currentEditId, obj).then(function() {
+        if (currentSection === "cats" && antes) return propagarCategoria(antes, obj);
+      }).then(function() {
         toast(cfg.label + " atualizado!", "ok");
         closeGenModal();
         loadGeneric(currentSection);
@@ -780,6 +892,27 @@ function editGeneric(section, id) {
 
 function delGeneric(section, id) {
   var cfg = TABLES[section];
+  if (section === "cats") {
+    var c = (genericData.cats||[]).find(function(x){ return x.id == id; });
+    if (!c) return;
+    var filhas = (genericData.cats||[]).filter(function(x){ return x.parent_id == id; });
+    if (filhas.length) { toast("Essa categoria tem subcategorias. Exclua ou mova as subcategorias primeiro.", "err"); return; }
+    var pai = c.parent_id ? (genericData.cats||[]).find(function(x){ return x.id == c.parent_id; }) : null;
+    var usados = produtos.filter(function(p){
+      return pai ? (p.categoria === pai.nome && p.subcategoria === c.nome) : p.categoria === c.nome;
+    }).length;
+    var msg = "Excluir \"" + c.nome + "\"?";
+    if (usados) msg += "\n\n" + usados + " produto(s) usam essa " + (pai ? "subcategoria" : "categoria") + (pai ? " e ficarão sem subcategoria." : " e vão SUMIR do site até você trocar a categoria deles.");
+    if (!confirm(msg)) return;
+    supa("DELETE", cfg.table + "?id=eq." + id).then(function() {
+      // subcategoria excluída: tira ela dos produtos que usavam
+      if (pai && usados) return supa("PATCH", "produtos?categoria=eq." + encodeURIComponent(pai.nome) + "&subcategoria=eq." + encodeURIComponent(c.nome), { subcategoria: null }).then(function(){ loadAll(); });
+    }).then(function() {
+      toast("Excluído.", "ok");
+      loadGeneric(section);
+    }).catch(function(e) { toast("Erro: " + e.message, "err"); });
+    return;
+  }
   if (!confirm("Excluir este " + cfg.label.toLowerCase() + "?")) return;
   supa("DELETE", cfg.table + "?id=eq." + id).then(function() {
     toast("Excluído.", "ok");

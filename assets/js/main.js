@@ -93,19 +93,14 @@ function toggleFaq(btn) {
     var WPP_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
 
     // ┌─────────────────────────────────────────────────────────────┐
-    // │ ORDEM DAS CATEGORIAS NO CATÁLOGO                            │
-    // │ A ordem aqui define a ordem que aparece no site.            │
-    // │ Para mudar: troque a posição das linhas abaixo.            │
-    // │ (Obs: a mesma ordem precisa estar nas abas, nos cards e nas │
-    // │  seções lá no index.html — peça ajuda se quiser reordenar.) │
+    // │ CATEGORIAS DO CATÁLOGO                                      │
+    // │ Vêm do painel admin (tabela "categorias" no Supabase):      │
+    // │ nome, ordem, status e subcategorias. Nada fixo aqui.        │
+    // │ A lista abaixo só é usada se o Supabase não responder.      │
     // └─────────────────────────────────────────────────────────────┘
-    var CAT_IDS = {
-      "Lembrancinhas": "cat-lemb",
-      "Impress\u00e3o 3D": "cat-3d",
-      "Mimos Personalizados": "cat-mimos",
-      "Presentes & Cestas": "cat-cestas",
-      "Empresas & Datas": "cat-empresas"
-    };
+    var CAT_RESERVA = ["Lembrancinhas", "Impress\u00e3o 3D"];
+    var CAT_IDS = {};   // nome da categoria -> id da seção (preenchido em montarCategorias)
+    var CAT_SUBS = {};  // nome da categoria -> [subcategorias na ordem do admin]
     var BADGE_CLS = {}; // será preenchido dinamicamente
     var BADGE_STYLES = {}; // { nome: { cor_texto, cor_fundo } }
 
@@ -594,10 +589,17 @@ function toggleFaq(btn) {
         headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
       }).then(function(r) { return r.json(); }).catch(function() { return []; });
 
-      Promise.all([badgesReq, produtosReq, depsReq]).then(function(results) {
-        var badgesData = results[0] || [];
-        var produtosData = results[1] || [];
-        var depsData = results[2] || [];
+      var catsReq = fetch(SUPA_URL + "/rest/v1/categorias?select=*&status=eq.Ativa&order=ordem.asc,nome.asc", {
+        headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
+      }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+
+      Promise.all([badgesReq, produtosReq, depsReq, catsReq]).then(function(results) {
+        var badgesData = Array.isArray(results[0]) ? results[0] : [];
+        var produtosData = Array.isArray(results[1]) ? results[1] : [];
+        var depsData = Array.isArray(results[2]) ? results[2] : [];
+
+        // Monta abas, seções, cards e rodapé a partir das categorias do admin
+        montarCategorias(Array.isArray(results[3]) ? results[3] : null);
 
         // guarda os produtos para reordenar quando o cliente trocar a ordenação
         window._catalogoProdutos = produtosData;
@@ -679,8 +681,109 @@ function toggleFaq(btn) {
       }
     }
 
+    // ── Ícone de traço fino por categoria (pelo nome; padrão = presente) ──
+    var ICONES_CAT = {
+      presente: '<path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8"/><path d="M2 7h20v5H2z"/><path d="M12 21V7"/><path d="M12 7S10.5 3 8 3a2 2 0 0 0 0 4M12 7s1.5-4 4-4a2 2 0 0 1 0 4"/>',
+      camadas: '<path d="M12 2 3 7l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+      coracao: '<path d="M19 14c1.5-1.5 3-3.3 3-5.5A4.5 4.5 0 0 0 12 5.5 4.5 4.5 0 0 0 2 8.5c0 2.2 1.5 4 3 5.5l7 7 7-7Z"/>',
+      cesta: '<path d="M3 10h18l-1.5 9.5a1 1 0 0 1-1 .5H5.5a1 1 0 0 1-1-.5L3 10Z"/><path d="m8 10 2-5M16 10l-2-5"/><path d="M2 10h20"/>',
+      predio: '<path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16"/><path d="M15 9h4a1 1 0 0 1 1 1v11"/><path d="M2 21h20"/><path d="M8 7h2M8 11h2M8 15h2"/>',
+      papel: '<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>'
+    };
+    function iconeCategoria(nome) {
+      var n = (nome || '').toLowerCase();
+      var k = 'presente';
+      if (n.indexOf('3d') >= 0 || n.indexOf('impress') >= 0) k = 'camadas';
+      else if (n.indexOf('mimo') >= 0 || n.indexOf('amor') >= 0) k = 'coracao';
+      else if (n.indexOf('cesta') >= 0 || n.indexOf('kit') >= 0) k = 'cesta';
+      else if (n.indexOf('empresa') >= 0 || n.indexOf('corporat') >= 0 || n.indexOf('brinde') >= 0) k = 'predio';
+      else if (n.indexOf('papel') >= 0 || n.indexOf('convite') >= 0) k = 'papel';
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '1.4'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+      svg.innerHTML = ICONES_CAT[k]; // conteúdo fixo do próprio código (não vem do banco)
+      return svg;
+    }
+
+    // Cor de cada categoria (na ordem do admin; repete depois da 5ª)
+    var CORES_CAT = ['teal', 'purple', 'amber', 'rose', 'blue'];
+
+    // Monta abas + seções + cards do topo + rodapé a partir da tabela "categorias".
+    // rows = null quando o Supabase falha -> usa CAT_RESERVA.
+    function montarCategorias(rows) {
+      var principais, filhas = {};
+      if (rows === null) {
+        principais = CAT_RESERVA.map(function(n, i) { return { id: 'r' + i, nome: n }; });
+      } else {
+        var ativas = {};
+        rows.forEach(function(c) { ativas[c.id] = c; });
+        principais = rows.filter(function(c) { return !c.parent_id; });
+        rows.forEach(function(c) {
+          // subcategoria só aparece se a categoria-mãe também estiver ativa
+          if (c.parent_id && ativas[c.parent_id]) {
+            (filhas[c.parent_id] = filhas[c.parent_id] || []).push(c.nome);
+          }
+        });
+      }
+
+      CAT_IDS = {}; CAT_SUBS = {};
+      principais.forEach(function(c) {
+        CAT_IDS[c.nome] = 'cat-c' + c.id;
+        CAT_SUBS[c.nome] = filhas[c.id] || [];
+      });
+
+      var tabs = document.getElementById('cat-tabs');
+      var secs = document.getElementById('cat-sections');
+      var cards = document.getElementById('hero-cats-inner');
+      var rodape = document.getElementById('footer-cats');
+      if (tabs) while (tabs.firstChild) tabs.removeChild(tabs.firstChild);
+      if (secs) while (secs.firstChild) secs.removeChild(secs.firstChild);
+      if (cards) while (cards.firstChild) cards.removeChild(cards.firstChild);
+      if (rodape) rodape.querySelectorAll('a').forEach(function(a) { a.remove(); });
+
+      if (!principais.length) {
+        if (secs) secs.appendChild(el('div', {className:'cat-empty', textContent:'Em breve novos produtos.'}));
+        var hc = document.querySelector('.hero-cats'); if (hc) hc.style.display = 'none';
+        return;
+      }
+
+      principais.forEach(function(c, i) {
+        var secId = CAT_IDS[c.nome];
+
+        var tab = el('button', {className:'cat-tab' + (i === 0 ? ' active' : ''), role:'tab', textContent:c.nome});
+        tab.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+        tab.setAttribute('aria-controls', secId);
+        var cor = CORES_CAT[i % CORES_CAT.length];
+        tab.style.setProperty('--tab-c', 'var(--' + cor + ')');
+        tab.addEventListener('click', function() { showCat(secId, tab); });
+        if (tabs) tabs.appendChild(tab);
+
+        var sec = el('div', {className:'cat-section' + (i === 0 ? ' active' : ''), id:secId, role:'tabpanel'});
+        sec.setAttribute('aria-label', c.nome);
+        sec.style.setProperty('--accent', 'var(--' + cor + ')');
+        sec.style.setProperty('--accent-l', 'var(--' + cor + '-l)');
+        sec.style.setProperty('--accent-d', 'var(--' + cor + '-d)');
+        if (secs) secs.appendChild(sec);
+
+        if (cards) {
+          var card = el('a', {href:'#catalogo', className:'hero-cat-card'});
+          var ic = el('span', {className:'hero-cat-icon'}); ic.appendChild(iconeCategoria(c.nome));
+          card.appendChild(ic);
+          card.appendChild(el('span', {className:'hero-cat-name', textContent:c.nome}));
+          card.addEventListener('click', function() { showCat(secId, tab); });
+          cards.appendChild(card);
+        }
+
+        if (rodape) {
+          var a = el('a', {href:'#catalogo', textContent:c.nome});
+          a.addEventListener('click', function() { showCat(secId, tab); });
+          rodape.appendChild(a);
+        }
+      });
+    }
+
     function renderCatalog(data) {
-      if (!data || !data.length) return;
+      data = data || [];
       var cats = {};
       data.forEach(function(p) {
         var c = p.categoria || "Outros";
@@ -693,15 +796,16 @@ function toggleFaq(btn) {
         if (!sec) return;
         var prods = cats[catName];
         while (sec.firstChild) sec.removeChild(sec.firstChild);
+        sec.classList.remove('has-subcats');
         if (!prods || !prods.length) {
           sec.appendChild(el('div', {className:'cat-empty', textContent:'Em breve novos produtos nesta categoria.'}));
           sec.querySelector('.cat-empty').style.cssText = 'text-align:center;padding:40px;color:#999;font-size:.9rem';
           return;
         }
 
-        var subcats = [];
-        prods.forEach(function(p) {
-          if (p.subcategoria && subcats.indexOf(p.subcategoria) < 0) subcats.push(p.subcategoria);
+        // Subcategorias cadastradas no admin (na ordem do admin), só as que têm produto
+        var subcats = (CAT_SUBS[catName] || []).filter(function(sc) {
+          return prods.some(function(p) { return p.subcategoria === sc; });
         });
 
         var hasSubcats = subcats.length > 0;
