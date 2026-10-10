@@ -975,3 +975,26 @@
   .product-foot::before { left: -17px; }
   .product-foot::after  { right: -17px; }
 }
+
+/* ── Descrição: "Ver mais / Ver menos" ── */
+.product-desc.open {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+.desc-toggle {
+  background: none;
+  border: none;
+  padding: 4px 0 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--accent-d, var(--teal-d));
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  align-self: flex-start;
+}
+.desc-toggle:hover { color: var(--accent, var(--teal)); }
+.desc-toggle[hidden] { display: none; }
