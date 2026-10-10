@@ -392,8 +392,12 @@ tr:hover td{background:var(--bg)}
         <input type="file" id="fextra-inp" accept="image/jpeg,image/png,image/webp" onchange="handleExtraFoto(this)" style="display:none" multiple>
       </div>
       <div class="fi fw"><label class="fl">Nome do produto *</label><input class="fx" id="fn" placeholder="Ex: Caixa Milk Personalizada"></div>
-      <div class="fi"><label class="fl">Categoria *</label><select class="fx" id="fcat" onchange="atualizarSubcats('')"><option value="">Selecione...</option></select></div>
-      <div class="fi"><label class="fl">Subcategoria</label><select class="fx" id="fsubcat"><option value="">Nenhuma</option></select></div>
+      <div class="fi"><label class="fl">Categoria *</label><select class="fx" id="fcat" onchange="atualizarSubcats('');renderExtras()"><option value="">Selecione...</option></select></div>
+      <div class="fi"><label class="fl">Subcategoria</label><select class="fx" id="fsubcat" onchange="renderExtras()"><option value="">Nenhuma</option></select></div>
+      <div class="fi fw"><label class="fl">Também aparece em <span style="font-weight:400;color:var(--sf)">(opcional)</span></label>
+        <div id="fextras" style="display:flex;flex-wrap:wrap;gap:6px 8px;padding:10px 12px;border:1.5px solid var(--ln);border-radius:10px;background:var(--bg,#fafaf8)"></div>
+        <div style="font-size:.74rem;color:var(--sf);margin-top:6px">Marque outras categorias ou subcategorias onde este produto também deve aparecer no site.</div>
+      </div>
       <div class="fi"><label class="fl">Badge</label><select class="fx" id="fbdg"><option value="Nenhum">Nenhum</option><option value="Novo">Novo</option><option value="Personalizável">Personalizável</option><option value="Mais pedido">Mais pedido</option><option value="Sob consulta">Sob consulta</option></select></div>
       <div class="fi"><label class="fl">Preço</label><input class="fx" id="fpr" placeholder="Ex: 30,90"></div>
       <div class="fi"><label class="fl">Tipo de preço</label><select class="fx" id="fpt"><option value="fixo">Valor fixo</option><option value="partir">A partir de</option><option value="consulta">Sob consulta</option></select></div>
