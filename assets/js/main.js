@@ -858,11 +858,29 @@ function toggleFaq(btn) {
 
     function renderCatalog(data) {
       data = data || [];
+      // Cada produto entra na categoria principal + nas extras ("Também aparece em").
+      // Dentro de uma mesma categoria o produto aparece UMA vez, com todas as suas subcategorias.
       var cats = {};
+      var vistos = {}; // categoria -> { id do produto -> cópia }
+      function colocar(p, cat, sub) {
+        if (!cat) return;
+        vistos[cat] = vistos[cat] || {};
+        var copia = vistos[cat][p.id];
+        if (!copia) {
+          copia = Object.assign({}, p, { categoria: cat, subcategoria: sub || null, _subs: [] });
+          vistos[cat][p.id] = copia;
+          (cats[cat] = cats[cat] || []).push(copia);
+        }
+        if (sub && copia._subs.indexOf(sub) < 0) copia._subs.push(sub);
+        if (!copia.subcategoria && sub) copia.subcategoria = sub;
+      }
       data.forEach(function(p) {
-        var c = p.categoria || "Outros";
-        if (!cats[c]) cats[c] = [];
-        cats[c].push(p);
+        colocar(p, p.categoria || "Outros", p.subcategoria);
+        var extras = p.categorias_extras;
+        if (typeof extras === "string") { try { extras = JSON.parse(extras); } catch(e) { extras = []; } }
+        (Array.isArray(extras) ? extras : []).forEach(function(x) {
+          if (x && x.categoria) colocar(p, x.categoria, x.subcategoria);
+        });
       });
       Object.keys(CAT_IDS).forEach(function(catName) {
         var secId = CAT_IDS[catName];
@@ -879,7 +897,7 @@ function toggleFaq(btn) {
 
         // Subcategorias cadastradas no admin (na ordem do admin), só as que têm produto
         var subcats = (CAT_SUBS[catName] || []).filter(function(sc) {
-          return prods.some(function(p) { return p.subcategoria === sc; });
+          return prods.some(function(p) { return p._subs.indexOf(sc) >= 0; });
         });
 
         var hasSubcats = subcats.length > 0;
@@ -903,10 +921,12 @@ function toggleFaq(btn) {
             var card;
             if (item.type === 'group') {
               card = buildGroupCard(item.variants, catName, i);
-              card.setAttribute('data-sub', item.variants[0].subcategoria || '');
+              var subsG = [];
+              item.variants.forEach(function(v) { v._subs.forEach(function(x) { if (subsG.indexOf(x) < 0) subsG.push(x); }); });
+              card.setAttribute('data-sub', subsG.join('|'));
             } else {
               card = buildCard(item.product, catName, i);
-              card.setAttribute('data-sub', item.product.subcategoria || '');
+              card.setAttribute('data-sub', item.product._subs.join('|'));
             }
             grid.appendChild(card);
           });
@@ -918,7 +938,8 @@ function toggleFaq(btn) {
             var sub = btn.getAttribute('data-sub');
             filterBar.querySelectorAll('.subcat-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
             grid.querySelectorAll('.product-card').forEach(function(card) {
-              card.style.display = (!sub || card.getAttribute('data-sub') === sub) ? '' : 'none';
+              var subsCard = (card.getAttribute('data-sub') || '').split('|');
+              card.style.display = (!sub || subsCard.indexOf(sub) >= 0) ? '' : 'none';
             });
           });
         } else {
