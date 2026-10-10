@@ -128,6 +128,41 @@ function toggleFaq(btn) {
       return e;
     }
 
+    // ── "Ver mais" na descrição: só aparece quando o texto foi cortado ──
+    var _descObs = ('ResizeObserver' in window) ? new ResizeObserver(function(entries) {
+      entries.forEach(function(e) { checarDesc(e.target); });
+    }) : null;
+    function checarDesc(desc) {
+      var btn = desc._verMais;
+      if (!btn || desc.classList.contains('open')) return;
+      if (!desc.clientHeight) return; // seção escondida: confere quando aparecer
+      btn.hidden = desc.scrollHeight <= desc.clientHeight + 2;
+    }
+    function addVerMais(desc) {
+      var btn = el('button', {className:'desc-toggle', type:'button', textContent:'Ver mais'});
+      btn.hidden = true;
+      btn.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        var aberto = desc.classList.toggle('open');
+        btn.textContent = aberto ? 'Ver menos' : 'Ver mais';
+        btn.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+        if (!aberto) checarDesc(desc);
+      });
+      btn.setAttribute('aria-expanded', 'false');
+      desc._verMais = btn;
+      desc.parentNode.insertBefore(btn, desc.nextSibling);
+      if (_descObs) _descObs.observe(desc);
+      requestAnimationFrame(function() { checarDesc(desc); });
+      return btn;
+    }
+    function resetVerMais(desc) {
+      if (!desc._verMais) return;
+      desc.classList.remove('open');
+      desc._verMais.textContent = 'Ver mais';
+      desc._verMais.setAttribute('aria-expanded', 'false');
+      requestAnimationFrame(function() { checarDesc(desc); });
+    }
+
     function createWppSvg() {
       var div = document.createElement('span');
       div.innerHTML = WPP_SVG;
@@ -350,7 +385,9 @@ function toggleFaq(btn) {
       var body = el('div', {className:'product-body'});
       body.appendChild(el('div', {className:'product-cat', textContent: catName}));
       body.appendChild(el('h3', {className:'product-name', textContent: p.nome || ''}));
-      body.appendChild(el('p', {className:'product-desc', textContent: p.descricao || ''}));
+      var descSimples = el('p', {className:'product-desc', textContent: p.descricao || ''});
+      body.appendChild(descSimples);
+      addVerMais(descSimples);
 
       var foot = el('div', {className:'product-foot'});
       foot.appendChild(buildPrice(p));
@@ -450,6 +487,7 @@ function toggleFaq(btn) {
       // Descrição (muda com a variação)
       var descEl = el('p', {className:'product-desc', textContent: variants[0].descricao || ''});
       body.appendChild(descEl);
+      addVerMais(descEl);
 
       // Footer (preço + botão WPP)
       var foot = el('div', {className:'product-foot'});
@@ -493,6 +531,7 @@ function toggleFaq(btn) {
         // Atualizar nome, descrição, preço, botão WPP
         nameEl.textContent = v.nome || '';
         descEl.textContent = v.descricao || '';
+        resetVerMais(descEl);
 
         // Rebuild price
         while (priceWrap.firstChild) priceWrap.removeChild(priceWrap.firstChild);
