@@ -128,6 +128,40 @@ function toggleFaq(btn) {
       return e;
     }
 
+    // ── Descrição formatada: respeita quebras de linha, listas e "Rótulo:" ──
+    // Monta com textContent (nunca innerHTML com dado do banco).
+    function preencherDesc(box, texto) {
+      while (box.firstChild) box.removeChild(box.firstChild);
+      var linhas = String(texto || '').replace(/\r/g, '').split('\n');
+      var lista = null;
+      function rotulado(pai, txt) {
+        var m = txt.match(/^([^:\n]{2,40}):\s*(.*)$/);
+        if (m && !/^https?$/i.test(m[1])) {
+          pai.appendChild(el('strong', {textContent: m[1] + ':'}));
+          if (m[2]) pai.appendChild(document.createTextNode(' ' + m[2]));
+        } else {
+          pai.appendChild(document.createTextNode(txt));
+        }
+      }
+      linhas.forEach(function(l) {
+        var t = l.trim();
+        if (!t) { lista = null; return; }
+        var b = t.match(/^[*\-•·]\s+(.*)$/);
+        if (b) {
+          if (!lista) { lista = el('ul', {className:'desc-list'}); box.appendChild(lista); }
+          var li = el('li'); rotulado(li, b[1]); lista.appendChild(li);
+        } else {
+          lista = null;
+          var par = el('p'); rotulado(par, t); box.appendChild(par);
+        }
+      });
+    }
+    function novaDesc(texto) {
+      var box = el('div', {className:'product-desc'});
+      preencherDesc(box, texto);
+      return box;
+    }
+
     // ── "Ver mais" na descrição: só aparece quando o texto foi cortado ──
     var _descObs = ('ResizeObserver' in window) ? new ResizeObserver(function(entries) {
       entries.forEach(function(e) { checarDesc(e.target); });
@@ -137,6 +171,7 @@ function toggleFaq(btn) {
       if (!btn || desc.classList.contains('open')) return;
       if (!desc.clientHeight) return; // seção escondida: confere quando aparecer
       btn.hidden = desc.scrollHeight <= desc.clientHeight + 2;
+      desc.classList.toggle('has-more', !btn.hidden);
     }
     function addVerMais(desc) {
       var btn = el('button', {className:'desc-toggle', type:'button', textContent:'Ver mais'});
@@ -385,7 +420,7 @@ function toggleFaq(btn) {
       var body = el('div', {className:'product-body'});
       body.appendChild(el('div', {className:'product-cat', textContent: catName}));
       body.appendChild(el('h3', {className:'product-name', textContent: p.nome || ''}));
-      var descSimples = el('p', {className:'product-desc', textContent: p.descricao || ''});
+      var descSimples = novaDesc(p.descricao);
       body.appendChild(descSimples);
       addVerMais(descSimples);
 
@@ -485,7 +520,7 @@ function toggleFaq(btn) {
       }
 
       // Descrição (muda com a variação)
-      var descEl = el('p', {className:'product-desc', textContent: variants[0].descricao || ''});
+      var descEl = novaDesc(variants[0].descricao);
       body.appendChild(descEl);
       addVerMais(descEl);
 
@@ -530,7 +565,7 @@ function toggleFaq(btn) {
 
         // Atualizar nome, descrição, preço, botão WPP
         nameEl.textContent = v.nome || '';
-        descEl.textContent = v.descricao || '';
+        preencherDesc(descEl, v.descricao);
         resetVerMais(descEl);
 
         // Rebuild price
