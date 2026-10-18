@@ -200,6 +200,7 @@ tr:hover td{background:var(--bg)}
     <button class="ni" onclick="showP('banners',this)">🎯 Banners</button>
     <button class="ni" onclick="showP('badges',this)">🏷️ Badges</button>
     <button class="ni" onclick="showP('cal',this)">📅 Calendário</button>
+    <button class="ni" onclick="showP('orc',this)">🧾 Orçamentos</button>
     <button class="ni" onclick="showP('config',this)">⚙️ Config</button>
   </nav>
   <div class="sb-ft">
@@ -302,6 +303,11 @@ tr:hover td{background:var(--bg)}
     <p style="font-size:.82rem;color:var(--sf);margin-bottom:16px">Crie etiquetas personalizadas para seus produtos. A cor de fundo e texto são aplicadas automaticamente no site.</p>
     <div class="tb"><div class="tb-l"></div><button class="ba" onclick="openModal('badges')">+ Novo badge</button></div>
     <div class="tw"><table><thead><tr><th>Preview</th><th>Nome</th><th>Cores</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead><tbody id="badges-tbody"></tbody></table></div>
+  </div>
+
+  <!-- ORÇAMENTOS (ferramenta em orcamento.html, carregada só ao abrir a aba) -->
+  <div id="panel-orc" style="display:none">
+    <iframe id="orc-frame" title="Gerador de orçamentos" allow="clipboard-write; web-share" style="width:100%;height:calc(100vh - 56px);min-height:640px;border:0;border-radius:var(--rd);background:#F6F5FB"></iframe>
   </div>
 </main>
 </div>

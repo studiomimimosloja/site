@@ -117,6 +117,10 @@ function showP(id, btn) {
   var el = document.getElementById("panel-" + id);
   if (el) el.style.display = "block";
   if (btn) btn.classList.add("act");
+  if (id === "orc") {
+    var fr = document.getElementById("orc-frame");
+    if (fr && !fr.getAttribute("src")) fr.setAttribute("src", "orcamento.html");
+  }
 }
 
 function stats() {
