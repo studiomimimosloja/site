@@ -1010,87 +1010,95 @@ function delGeneric(section, id) {
 }
 
 // ════════════════════════════════════════════════════
-// CALENDÁRIO COMERCIAL — Multi-view
+// CALENDÁRIO COMERCIAL — datas quentes (enxuto)
 // ════════════════════════════════════════════════════
 
-TABLES['cal'] = { table: "calendario", label: "Data comemorativa", order: "mes.asc,data_evento.asc" };
+TABLES['cal'] = { table: "calendario", label: "Data comemorativa", order: "id.asc" };
 
 FORM_FIELDS['cal'] = [
   { id: 'g-nome', label: 'Nome da data *', type: 'text', field: 'nome', required: true },
-  { id: 'g-data', label: 'Data (ex: 10/05 ou Mês)', type: 'text', field: 'data_evento', required: true },
-  { id: 'g-mes', label: 'Mês', type: 'select', field: 'mes', opts: ['','JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ','TODO'] },
-  { id: 'g-cat', label: 'Categoria', type: 'select', field: 'categoria', opts: ['','Família','Empresas','Escolas','Religioso','Saúde','Cultura','Festas','Comercial'] },
+  { id: 'g-data', label: 'Data (dia/mês, ex: 12/06) *', type: 'text', field: 'data_evento', required: true },
+  { id: 'g-regra', label: 'A data muda todo ano?', type: 'select', field: 'regra_data', opts: [
+    { v: '', l: 'Não, é data fixa' },
+    { v: 'dom:05:2', l: '2º domingo de maio (Dia das Mães)' },
+    { v: 'dom:08:2', l: '2º domingo de agosto (Dia dos Pais)' },
+    { v: 'pascoa:0', l: 'Páscoa' },
+    { v: 'bf', l: 'Black Friday' }
+  ] },
   { id: 'g-potencial', label: 'Potencial de venda', type: 'select', field: 'potencial', opts: ['Baixo','Médio','Alto','Muito alto'], def: 'Médio' },
-  { id: 'g-publico', label: 'Público-alvo', type: 'textarea', field: 'publico_alvo' },
-  { id: 'g-produtos', label: 'Produtos sugeridos', type: 'textarea', field: 'produtos_sugeridos' },
-  { id: 'g-materiais', label: 'Materiais necessários', type: 'textarea', field: 'materiais_necessarios' },
-  { id: 'g-dplan', label: 'Dias p/ planejamento', type: 'number', field: 'dias_planejamento', def: '90' },
-  { id: 'g-dcomp', label: 'Dias p/ comprar materiais', type: 'number', field: 'dias_compra_materiais', def: '60' },
-  { id: 'g-ddiv', label: 'Dias p/ divulgação', type: 'number', field: 'dias_divulgacao', def: '30' },
-  { id: 'g-denc', label: 'Dias p/ encerrar pedidos', type: 'number', field: 'dias_encerrar_pedidos', def: '7' },
-  { id: 'g-campanha', label: 'Ideias de campanha', type: 'textarea', field: 'ideias_campanha' },
-  { id: 'g-posts', label: 'Ideias de posts', type: 'textarea', field: 'ideias_posts' },
-  { id: 'g-reels', label: 'Ideias de reels', type: 'textarea', field: 'ideias_reels' },
-  { id: 'g-stories', label: 'Ideias de stories', type: 'textarea', field: 'ideias_stories' },
-  { id: 'g-wpp', label: 'Mensagem WhatsApp', type: 'textarea', field: 'msg_whatsapp' },
-  { id: 'g-obs', label: 'Observações', type: 'textarea', field: 'observacoes' },
-  { id: 'g-custo', label: 'Custo estimado', type: 'text', field: 'custo_estimado' },
-  { id: 'g-prior', label: 'Prioridade', type: 'select', field: 'prioridade', opts: ['Baixa','Média','Alta','Urgente'], def: 'Média' },
-  { id: 'g-status', label: 'Status', type: 'select', field: 'status', opts: ['Planejada','Em andamento','Concluída','Atrasada','Cancelada'], def: 'Planejada' },
-  { id: 'g-rvendas', label: '📊 Resultado: Vendas', type: 'text', field: 'resultado_vendas' },
-  { id: 'g-rprod', label: '📊 Resultado: Produtos top', type: 'textarea', field: 'resultado_produtos_top' },
-  { id: 'g-rmelhoria', label: '📊 Melhorias p/ próximo ano', type: 'textarea', field: 'resultado_melhorias' }
+  { id: 'g-linha', label: 'Linha de produto', type: 'select', field: 'linha_produto', opts: [
+    { v: '', l: 'Não definida' }, 'Papelaria', 'Impressão 3D', 'Acrílico', 'Caneca', 'Kit', 'Corporativo', 'Várias'
+  ] },
+  { id: 'g-produtos', label: 'Ideias de produto ou kit', type: 'textarea', field: 'produtos_sugeridos' },
+  { id: 'g-dplan', label: 'Começar a preparar (dias antes)', type: 'number', field: 'dias_planejamento', def: '45' },
+  { id: 'g-ddiv', label: 'Começar a divulgar (dias antes)', type: 'number', field: 'dias_divulgacao', def: '30' },
+  { id: 'g-denc', label: 'Encerrar pedidos (dias antes)', type: 'number', field: 'dias_encerrar_pedidos', def: '7' },
+  { id: 'g-wpp', label: 'Mensagem de WhatsApp (opcional)', type: 'textarea', field: 'msg_whatsapp' },
+  { id: 'g-obs', label: 'Observações', type: 'textarea', field: 'observacoes' }
 ];
 
-var calView = 'list';
-var calMonth = new Date().getMonth(); // 0-11 for month view navigation
+var calView = 'next';
+var CAL_DIAS_SEM = ['dom','seg','ter','qua','qui','sex','sáb'];
 
-var MES_ORDER = {JAN:1,FEV:2,MAR:3,ABR:4,MAI:5,JUN:6,JUL:7,AGO:8,SET:9,OUT:10,NOV:11,DEZ:12,TODO:13};
-var MES_NAMES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-var MES_SHORT = ['','JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-
-function parseCalDate(item) {
-  // Extract day number from data_evento (e.g. "13/06" -> {day:13, month:6})
-  var d = (item.data_evento || '').trim();
-  var mesIdx = MES_ORDER[item.mes] || 13;
-  
-  // Try DD/MM format
-  var m = d.match(/^(\d{1,2})\/(\d{1,2})/);
-  if (m) return { day: parseInt(m[1]), month: parseInt(m[2]), sortKey: parseInt(m[2]) * 100 + parseInt(m[1]) };
-  
-  // Try DD-DD/MM format (ranges like "14-17/02")
-  m = d.match(/^(\d{1,2})-(\d{1,2})\/(\d{1,2})/);
-  if (m) return { day: parseInt(m[1]), month: parseInt(m[3]), sortKey: parseInt(m[3]) * 100 + parseInt(m[1]) };
-  
-  // Try DD/MM-DD/MM format
-  m = d.match(/^(\d{1,2})\/(\d{1,2})-(\d{1,2})\/(\d{1,2})/);
-  if (m) return { day: parseInt(m[1]), month: parseInt(m[2]), sortKey: parseInt(m[2]) * 100 + parseInt(m[1]) };
-
-  // Fallback: use month order, put at start of month
-  return { day: 1, month: mesIdx <= 12 ? mesIdx : 0, sortKey: mesIdx * 100 };
+// ── Cálculo de datas ──
+function calPascoa(ano) {
+  var a = ano % 19, b = Math.floor(ano / 100), c = ano % 100;
+  var d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  var g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  var i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  var m = Math.floor((a + 11 * h + 22 * l) / 451);
+  var mes = Math.floor((h + l - 7 * m + 114) / 31);
+  var dia = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(ano, mes - 1, dia);
 }
 
-function sortCalItems(items) {
-  return items.slice().sort(function(a, b) {
-    var da = parseCalDate(a);
-    var db = parseCalDate(b);
-    if (da.sortKey !== db.sortKey) return da.sortKey - db.sortKey;
-    return (a.nome || '').localeCompare(b.nome || '');
-  });
+function calNesimoDomingo(ano, mes, n) {
+  var primeiro = (7 - new Date(ano, mes - 1, 1).getDay()) % 7 + 1;
+  return new Date(ano, mes - 1, primeiro + (n - 1) * 7);
 }
 
-function filterCalItems(data) {
-  var fmes = (document.getElementById('cal-fmes') || {}).value || '';
-  var fst = (document.getElementById('cal-fst') || {}).value || '';
-  var fpot = (document.getElementById('cal-fpot') || {}).value || '';
-  return data.filter(function(item) {
-    return (!fmes || item.mes === fmes || item.mes === 'TODO')
-      && (!fst || item.status === fst)
-      && (!fpot || item.potencial === fpot);
-  });
+function calBlackFriday(ano) {
+  var primeiraQuinta = (4 - new Date(ano, 10, 1).getDay() + 7) % 7 + 1;
+  return new Date(ano, 10, primeiraQuinta + 21 + 1);
 }
 
-// Override generic render for calendar
+function calDataNoAno(item, ano) {
+  var r = (item.regra_data || '').split(':');
+  if (r[0] === 'pascoa') { var p = calPascoa(ano); return new Date(ano, p.getMonth(), p.getDate() + (parseInt(r[1]) || 0)); }
+  if (r[0] === 'dom') return calNesimoDomingo(ano, parseInt(r[1]), parseInt(r[2]));
+  if (r[0] === 'bf') return calBlackFriday(ano);
+  var m = (item.data_evento || '').trim().match(/^(\d{1,2})\/(\d{1,2})/);
+  if (m) return new Date(ano, parseInt(m[2]) - 1, parseInt(m[1]));
+  return null;
+}
+
+function calHoje() {
+  var n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+
+function calProxima(item, hoje) {
+  var d = calDataNoAno(item, hoje.getFullYear());
+  if (d && d < hoje) d = calDataNoAno(item, hoje.getFullYear() + 1);
+  return d;
+}
+
+function calSoma(d, dias) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + dias); }
+function calDiasEntre(a, b) { return Math.round((b - a) / 86400000); }
+function calFmt(d) { return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2); }
+
+function calPrazos(item, data, hoje) {
+  var prep = calSoma(data, -(parseInt(item.dias_planejamento) || 0));
+  var div = calSoma(data, -(parseInt(item.dias_divulgacao) || 0));
+  var enc = calSoma(data, -(parseInt(item.dias_encerrar_pedidos) || 0));
+  var etapa = hoje >= enc ? 'enc' : hoje >= div ? 'div' : hoje >= prep ? 'prep' : 'longe';
+  return { prep: prep, div: div, enc: enc, etapa: etapa };
+}
+
+var CAL_ETAPA_TXT = { enc: 'Pedidos encerrados', div: 'Hora de divulgar', prep: 'Hora de preparar', longe: 'Ainda longe' };
+var CAL_POT_CLASS = { 'Muito alto': 'bp-n', 'Alto': 'bp-p', 'Médio': 'bp-c', 'Baixo': 'bp-c' };
+
+// ── Troca de visão ──
 var origRenderGen = renderGeneric;
 renderGeneric = function(section) {
   if (section === 'cal') { renderCal(); return; }
@@ -1099,201 +1107,109 @@ renderGeneric = function(section) {
 
 function setCalView(view) {
   calView = view;
-  document.querySelectorAll('.cal-view-btn').forEach(function(b) { b.classList.remove('active'); });
-  document.getElementById('cv-' + view).classList.add('active');
-  document.getElementById('cal-view-list').style.display = view === 'list' ? 'block' : 'none';
-  document.getElementById('cal-view-month').style.display = view === 'month' ? 'block' : 'none';
-  document.getElementById('cal-view-timeline').style.display = view === 'timeline' ? 'block' : 'none';
+  ['next', 'all'].forEach(function(v) {
+    document.getElementById('cv-' + v).classList.toggle('active', v === view);
+    document.getElementById('cal-view-' + v).style.display = v === view ? 'block' : 'none';
+  });
   renderCal();
 }
 
 function renderCal() {
-  var data = genericData['cal'] || [];
-  var cnt = document.getElementById('cal-cnt');
-  if (cnt) cnt.textContent = '(' + data.length + ')';
-  
-  var filtered = filterCalItems(data);
-  var sorted = sortCalItems(filtered);
-
-  renderCalAlerts(data);
-
-  if (calView === 'list') renderCalList(sorted);
-  else if (calView === 'month') renderCalMonth(data);
-  else if (calView === 'timeline') renderCalTimeline(sorted);
+  var data = (genericData['cal'] || []).filter(function(i) { return i.status !== 'Cancelada'; });
+  var hoje = calHoje();
+  if (calView === 'next') renderCalProximas(data, hoje);
+  else renderCalAno(data, hoje);
 }
 
-// ── LIST VIEW ──
-function renderCalList(list) {
-  var tb = document.getElementById('cal-tbody');
-  if (!tb) return;
-  if (!list.length) {
-    tb.innerHTML = '<tr><td colspan="7"><div class="es"><span>📅</span>Nenhuma data encontrada</div></td></tr>';
+// ── Visão "Próximas datas" ──
+function renderCalProximas(data, hoje) {
+  var box = document.getElementById('cal-cards');
+  if (!box) return;
+  var lista = data.map(function(i) { return { item: i, data: calProxima(i, hoje) }; })
+    .filter(function(x) { return x.data; })
+    .sort(function(a, b) { return a.data - b.data; });
+
+  if (!lista.length) {
+    box.innerHTML = '<div class="es"><span>📅</span>Nenhuma data cadastrada</div>';
     return;
   }
 
-  var potIcons = { 'Muito alto': '🔥🔥', 'Alto': '🔥', 'Médio': '⭐', 'Baixo': '·' };
-  var stColors = { 'Planejada': 'sp-o', 'Em andamento': 'sp-a', 'Concluída': 'sp-a', 'Atrasada': 'sp-e', 'Cancelada': 'sp-o' };
-  var prioColors = { 'Urgente': 'bp-h', 'Alta': 'bp-n', 'Média': 'bp-p', 'Baixa': 'bp-c' };
+  var perto = lista.filter(function(x) { return calDiasEntre(hoje, x.data) <= 120; });
+  if (perto.length < 3) perto = lista.slice(0, 3);
 
-  tb.innerHTML = list.map(function(item) {
-    var st = stColors[item.status] || 'sp-o';
-    var pr = prioColors[item.prioridade] || 'bp-c';
-    var parsed = parseCalDate(item);
-    var mesLabel = parsed.month > 0 && parsed.month <= 12 ? MES_SHORT[parsed.month] : (item.mes || '');
+  box.innerHTML = perto.map(function(x) {
+    var it = x.item, d = x.data;
+    var dias = calDiasEntre(hoje, d);
+    var quando = dias === 0 ? 'hoje' : dias === 1 ? 'amanhã' : 'em ' + dias + ' dias';
+    var pz = calPrazos(it, d, hoje);
+    var det = '';
+    if (it.produtos_sugeridos) det += '<p><strong>Ideias:</strong> ' + esc(it.produtos_sugeridos) + '</p>';
+    if (it.msg_whatsapp) det += '<p><strong>WhatsApp:</strong> ' + esc(it.msg_whatsapp) + '</p>';
+    if (it.observacoes) det += '<p><strong>Obs.:</strong> ' + esc(it.observacoes) + '</p>';
+    var btnDet = det ? '<button class="cal-btn" data-cal="det" data-id="' + it.id + '">Detalhes</button>' : '';
+    return '<div class="cal-card cal-etapa-' + pz.etapa + '">'
+      + '<div class="cal-card-top"><div><div class="cal-card-nome">' + esc(it.nome) + '</div>'
+      + '<div class="cal-card-data">' + calFmt(d) + ' · ' + CAL_DIAS_SEM[d.getDay()] + ' · ' + quando + '</div></div>'
+      + '<span class="bp ' + (CAL_POT_CLASS[it.potencial] || 'bp-c') + '">' + esc(it.potencial || '') + '</span></div>'
+      + (it.linha_produto ? '<div class="cal-card-linha">' + esc(it.linha_produto) + '</div>' : '')
+      + '<div class="cal-card-etapa">' + CAL_ETAPA_TXT[pz.etapa] + '</div>'
+      + '<div class="cal-prazos"><span>Preparar a partir de <b>' + calFmt(pz.prep) + '</b></span>'
+      + '<span>Divulgar a partir de <b>' + calFmt(pz.div) + '</b></span>'
+      + '<span>Pedidos até <b>' + calFmt(pz.enc) + '</b></span></div>'
+      + '<div class="cal-card-acoes">' + btnDet
+      + '<button class="cal-btn" data-cal="edit" data-id="' + it.id + '">Editar</button>'
+      + '<button class="cal-btn cal-btn-del" data-cal="del" data-id="' + it.id + '">Excluir</button></div>'
+      + (det ? '<div class="cal-det" id="cal-det-' + it.id + '" style="display:none">' + det + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+// ── Visão "Ano todo" ──
+function renderCalAno(data, hoje) {
+  var tb = document.getElementById('cal-tbody');
+  if (!tb) return;
+  var ano = hoje.getFullYear();
+  var lista = data.map(function(i) { return { item: i, data: calDataNoAno(i, ano) }; })
+    .sort(function(a, b) {
+      if (!a.data) return 1;
+      if (!b.data) return -1;
+      return a.data - b.data;
+    });
+
+  if (!lista.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="es"><span>📅</span>Nenhuma data cadastrada</div></td></tr>';
+    return;
+  }
+
+  tb.innerHTML = lista.map(function(x) {
+    var it = x.item, d = x.data;
+    var enc = d ? calFmt(calSoma(d, -(parseInt(it.dias_encerrar_pedidos) || 0))) : '—';
     return '<tr>'
-      + '<td style="white-space:nowrap"><strong>' + esc(item.data_evento || '') + '</strong><br><small style="color:var(--sf)">' + mesLabel + '</small></td>'
-      + '<td><strong>' + esc(item.nome) + '</strong><br><small style="color:var(--sf)">' + esc(item.categoria || '') + '</small></td>'
-      + '<td style="text-align:center">' + (potIcons[item.potencial] || '·') + '<br><small style="font-size:.65rem;color:var(--sf)">' + esc(item.potencial || '') + '</small></td>'
-      + '<td>' + (item.dias_divulgacao || 30) + ' dias</td>'
-      + '<td><span class="bp ' + pr + '">' + esc(item.prioridade || 'Média') + '</span></td>'
-      + '<td><span class="sp ' + st + '">' + esc(item.status || 'Planejada') + '</span></td>'
+      + '<td style="white-space:nowrap"><strong>' + (d ? calFmt(d) : esc(it.data_evento || '—')) + '</strong></td>'
+      + '<td><strong>' + esc(it.nome) + '</strong></td>'
+      + '<td><span class="bp ' + (CAL_POT_CLASS[it.potencial] || 'bp-c') + '">' + esc(it.potencial || '') + '</span></td>'
+      + '<td>' + esc(it.linha_produto || '—') + '</td>'
+      + '<td>' + enc + '</td>'
       + '<td><div class="ac">'
-      + '<button class="ab ab-e" onclick="editGeneric(\'cal\',' + item.id + ')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
-      + '<button class="ab ab-d" onclick="delGeneric(\'cal\',' + item.id + ')" title="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
+      + '<button class="cal-btn" data-cal="edit" data-id="' + it.id + '">Editar</button>'
+      + '<button class="cal-btn cal-btn-del" data-cal="del" data-id="' + it.id + '">Excluir</button>'
       + '</div></td></tr>';
   }).join('');
 }
 
-// ── MONTH VIEW ──
-function calMonthNav(dir) {
-  calMonth += dir;
-  if (calMonth < 0) calMonth = 11;
-  if (calMonth > 11) calMonth = 0;
-  renderCalMonth(genericData['cal'] || []);
-}
-
-function renderCalMonth(allData) {
-  var monthIdx = calMonth + 1; // 1-12
-  var titleEl = document.getElementById('cal-month-title');
-  if (titleEl) titleEl.textContent = MES_NAMES[monthIdx] + ' 2026';
-
-  var grid = document.getElementById('cal-month-grid');
-  if (!grid) return;
-
-  // Get events for this month
-  var events = allData.filter(function(item) {
-    var p = parseCalDate(item);
-    return p.month === monthIdx || item.mes === 'TODO';
-  });
-
-  // Build calendar grid
-  var firstDay = new Date(2026, calMonth, 1).getDay(); // 0=Sun
-  var daysInMonth = new Date(2026, calMonth + 1, 0).getDate();
-  var today = new Date();
-  var todayDay = (today.getMonth() === calMonth && today.getFullYear() === 2026) ? today.getDate() : -1;
-
-  var html = '';
-  var dayNames = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  dayNames.forEach(function(d) { html += '<div class="cal-grid-header">' + d + '</div>'; });
-
-  // Previous month padding
-  for (var i = 0; i < firstDay; i++) html += '<div class="cal-day other"></div>';
-
-  // Days
-  for (var d = 1; d <= daysInMonth; d++) {
-    var isToday = d === todayDay;
-    html += '<div class="cal-day' + (isToday ? ' today' : '') + '">';
-    html += '<div class="cal-day-num">' + d + '</div>';
-    
-    // Find events on this day
-    events.forEach(function(ev) {
-      var p = parseCalDate(ev);
-      if (p.day === d && p.month === monthIdx) {
-        var potClass = 'pot-' + (ev.potencial || 'medio').toLowerCase().replace(' ', '-');
-        html += '<div class="cal-day-event ' + potClass + '" onclick="editGeneric(\'cal\',' + ev.id + ')" title="' + esc(ev.nome) + '">' + esc(ev.nome) + '</div>';
-      }
-    });
-    
-    // "TODO" events show on day 1 with a subtle indicator
-    if (d === 1) {
-      events.forEach(function(ev) {
-        if (ev.mes === 'TODO') {
-          html += '<div class="cal-day-event pot-medio" onclick="editGeneric(\'cal\',' + ev.id + ')" title="' + esc(ev.nome) + ' (contínuo)" style="opacity:.6;font-style:italic">↻ ' + esc(ev.nome).substring(0,15) + '</div>';
-        }
-      });
-    }
-    
-    html += '</div>';
+// Cliques nos botões do calendário (sem onclick inline)
+document.addEventListener('click', function(e) {
+  var el = e.target.closest ? e.target.closest('[data-cal]') : null;
+  if (!el) return;
+  var acao = el.getAttribute('data-cal');
+  var id = el.getAttribute('data-id');
+  if (acao === 'edit') editGeneric('cal', id);
+  else if (acao === 'del') delGeneric('cal', id);
+  else if (acao === 'det') {
+    var box = document.getElementById('cal-det-' + id);
+    if (box) box.style.display = box.style.display === 'block' ? 'none' : 'block';
   }
-
-  // Remaining padding
-  var totalCells = firstDay + daysInMonth;
-  var remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-  for (var i = 0; i < remaining; i++) html += '<div class="cal-day other"></div>';
-
-  grid.innerHTML = html;
-}
-
-// ── TIMELINE VIEW ──
-function renderCalTimeline(sorted) {
-  var container = document.getElementById('cal-timeline');
-  if (!container) return;
-  if (!sorted.length) { container.innerHTML = '<div class="es"><span>📅</span>Nenhuma data encontrada</div>'; return; }
-
-  var potIcons = { 'Muito alto': '🔥🔥', 'Alto': '🔥', 'Médio': '⭐', 'Baixo': '·' };
-  var stColors = { 'Planejada': '#9ca3af', 'Em andamento': '#2ECFC4', 'Concluída': '#22c55e', 'Atrasada': '#ef4444' };
-
-  // Group by month
-  var groups = {};
-  sorted.forEach(function(item) {
-    var p = parseCalDate(item);
-    var key = p.month > 0 && p.month <= 12 ? p.month : 13;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
-  });
-
-  var html = '';
-  Object.keys(groups).sort(function(a,b){ return a-b; }).forEach(function(monthKey) {
-    var mIdx = parseInt(monthKey);
-    var mName = mIdx <= 12 ? MES_NAMES[mIdx] : 'Todo o Ano';
-    var items = groups[monthKey];
-    
-    html += '<div class="tl-month">';
-    html += '<div class="tl-month-title">' + mName + ' <span>' + items.length + ' data' + (items.length > 1 ? 's' : '') + '</span></div>';
-    
-    items.forEach(function(item) {
-      var potClass = 'pot-' + (item.potencial || 'medio').toLowerCase().replace(' ', '-');
-      var stColor = stColors[item.status] || '#9ca3af';
-      html += '<div class="tl-item ' + potClass + '">';
-      html += '<div class="tl-date">' + esc(item.data_evento || '') + '</div>';
-      html += '<div class="tl-info">';
-      html += '<div class="tl-name">' + (potIcons[item.potencial] || '') + ' ' + esc(item.nome) + '</div>';
-      html += '<div class="tl-detail">' + esc(item.categoria || '') + (item.publico_alvo ? ' · ' + esc((item.publico_alvo||'').substring(0,60)) : '') + '</div>';
-      html += '<div style="margin-top:4px"><span class="sp" style="background:' + stColor + '20;color:' + stColor + '">' + esc(item.status || '') + '</span></div>';
-      html += '</div>';
-      html += '<div class="tl-actions">';
-      html += '<button class="ab ab-e" onclick="editGeneric(\'cal\',' + item.id + ')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
-      html += '<button class="ab ab-d" onclick="delGeneric(\'cal\',' + item.id + ')" title="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>';
-      html += '</div>';
-      html += '</div>';
-    });
-    
-    html += '</div>';
-  });
-
-  container.innerHTML = html;
-}
-
-function renderCalAlerts(data) {
-  var alertsDiv = document.getElementById('cal-alerts');
-  if (!alertsDiv || !data.length) { if(alertsDiv) alertsDiv.innerHTML = ''; return; }
-  
-  var pending = data.filter(function(d) { return d.status !== 'Concluída' && d.status !== 'Cancelada' && d.mes !== 'TODO'; });
-  if (!pending.length) { alertsDiv.innerHTML = ''; return; }
-
-  var urgentes = pending.filter(function(d) { return d.prioridade === 'Urgente' || d.prioridade === 'Alta'; });
-  var emAndamento = pending.filter(function(d) { return d.status === 'Em andamento'; });
-  var atrasadas = pending.filter(function(d) { return d.status === 'Atrasada'; });
-  var muitoAlto = pending.filter(function(d) { return d.potencial === 'Muito alto'; });
-
-  var html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">';
-  html += '<div class="sc" style="border-left:3px solid var(--r)"><div class="si" style="background:var(--rl)">⚠️</div><div><div class="sn">' + atrasadas.length + '</div><div class="sl">Atrasadas</div></div></div>';
-  html += '<div class="sc" style="border-left:3px solid var(--a)"><div class="si" style="background:var(--al)">🔥</div><div><div class="sn">' + urgentes.length + '</div><div class="sl">Alta prioridade</div></div></div>';
-  html += '<div class="sc" style="border-left:3px solid var(--t)"><div class="si" style="background:var(--tl)">🚀</div><div><div class="sn">' + emAndamento.length + '</div><div class="sl">Em andamento</div></div></div>';
-  html += '<div class="sc" style="border-left:3px solid #F59E0B"><div class="si" style="background:#FFFBEB">💰</div><div><div class="sn">' + muitoAlto.length + '</div><div class="sl">Potencial máximo</div></div></div>';
-  html += '</div>';
-  alertsDiv.innerHTML = html;
-}
+});
 
 
 // ============================================================

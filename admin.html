@@ -146,6 +146,30 @@ tr:hover td{background:var(--bg)}
   .fg{grid-template-columns:1fr}
 }
 @media(max-width:480px){.sg{grid-template-columns:1fr}}
+/* Calendário — datas quentes */
+.cal-view-btn{padding:8px 14px;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--mid);cursor:pointer;border:none;background:none;transition:all .2s;font-family:inherit}
+.cal-view-btn.active{background:var(--t);color:white;font-weight:600}
+.cal-view-btn:hover:not(.active){background:var(--ln)}
+.cal-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.cal-card{background:white;border:1px solid var(--ln);border-left:4px solid var(--ln);border-radius:var(--rd);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.cal-card.cal-etapa-prep{border-left-color:var(--p)}
+.cal-card.cal-etapa-div{border-left-color:var(--t)}
+.cal-card.cal-etapa-enc{border-left-color:var(--sf);opacity:.8}
+.cal-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.cal-card-nome{font-weight:600;font-size:1rem;color:var(--dk)}
+.cal-card-data{font-size:.78rem;color:var(--sf);margin-top:2px}
+.cal-card-linha{font-size:.76rem;color:var(--mid)}
+.cal-card-etapa{font-size:.8rem;font-weight:600;color:var(--dk)}
+.cal-etapa-div .cal-card-etapa{color:var(--td)}
+.cal-etapa-prep .cal-card-etapa{color:var(--p)}
+.cal-prazos{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--mid)}
+.cal-card-acoes{display:flex;gap:6px;flex-wrap:wrap}
+.cal-btn{padding:6px 12px;border-radius:8px;font-size:.78rem;font-weight:500;background:var(--bg2);color:var(--mid);border:none;cursor:pointer;transition:all .2s;font-family:inherit}
+.cal-btn:hover{background:var(--ln)}
+.cal-btn-del:hover{background:var(--rl);color:var(--r)}
+.cal-det{font-size:.8rem;color:var(--mid);background:var(--bg);border-radius:10px;padding:10px 12px;line-height:1.5}
+.cal-det p{margin:0 0 6px}
+.cal-det p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -247,56 +271,21 @@ tr:hover td{background:var(--bg)}
 
   <!-- CALENDÁRIO COMERCIAL -->
   <div id="panel-cal" style="display:none">
-    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:18px">📅 Calendário Comercial <span id="cal-cnt" style="font-size:.85rem;color:var(--sf);font-weight:400"></span></h2>
-    
-    <div id="cal-alerts" style="margin-bottom:20px"></div>
-    
-    <!-- View toggles -->
-    <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg2);padding:4px;border-radius:10px;width:fit-content">
-      <button class="cal-view-btn active" id="cv-list" onclick="setCalView('list')">📋 Lista</button>
-      <button class="cal-view-btn" id="cv-month" onclick="setCalView('month')">📅 Mensal</button>
-      <button class="cal-view-btn" id="cv-timeline" onclick="setCalView('timeline')">📊 Linha do Tempo</button>
-    </div>
+    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:6px">📅 Datas quentes <span id="cal-cnt" style="font-size:.85rem;color:var(--sf);font-weight:400"></span></h2>
+    <p style="font-size:.82rem;color:var(--sf);margin-bottom:16px">As datas que mais vendem, com o que preparar, quando divulgar e até quando aceitar pedidos. Aniversários, batizados, chá de fralda, revelação e casamentos acontecem o ano todo e não precisam estar aqui.</p>
 
     <div class="tb">
-      <div class="tb-l">
-        <select class="fs" id="cal-fmes" onchange="renderCal()">
-          <option value="">Todos os meses</option>
-          <option value="JAN">Janeiro</option><option value="FEV">Fevereiro</option><option value="MAR">Março</option>
-          <option value="ABR">Abril</option><option value="MAI">Maio</option><option value="JUN">Junho</option>
-          <option value="JUL">Julho</option><option value="AGO">Agosto</option><option value="SET">Setembro</option>
-          <option value="OUT">Outubro</option><option value="NOV">Novembro</option><option value="DEZ">Dezembro</option>
-        </select>
-        <select class="fs" id="cal-fst" onchange="renderCal()">
-          <option value="">Todos status</option>
-          <option>Planejada</option><option>Em andamento</option><option>Concluída</option><option>Atrasada</option>
-        </select>
-        <select class="fs" id="cal-fpot" onchange="renderCal()">
-          <option value="">Todos potenciais</option>
-          <option>Muito alto</option><option>Alto</option><option>Médio</option><option>Baixo</option>
-        </select>
+      <div class="tb-l" style="display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:10px">
+        <button class="cal-view-btn active" id="cv-next" onclick="setCalView('next')">Próximas datas</button>
+        <button class="cal-view-btn" id="cv-all" onclick="setCalView('all')">Ano todo</button>
       </div>
       <button class="ba" onclick="openModal('cal')">+ Nova data</button>
     </div>
 
-    <!-- LIST VIEW -->
-    <div id="cal-view-list">
-      <div class="tw"><table><thead><tr><th>Data</th><th>Nome</th><th>Potencial</th><th>Divulgar em</th><th>Prioridade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="cal-tbody"></tbody></table></div>
-    </div>
+    <div id="cal-view-next"><div id="cal-cards" class="cal-cards"></div></div>
 
-    <!-- MONTH VIEW -->
-    <div id="cal-view-month" style="display:none">
-      <div id="cal-month-nav" style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px">
-        <button class="fs" onclick="calMonthNav(-1)">◀</button>
-        <h3 id="cal-month-title" style="font-size:1.1rem;font-weight:600;min-width:160px;text-align:center"></h3>
-        <button class="fs" onclick="calMonthNav(1)">▶</button>
-      </div>
-      <div id="cal-month-grid" class="cal-grid"></div>
-    </div>
-
-    <!-- TIMELINE VIEW -->
-    <div id="cal-view-timeline" style="display:none">
-      <div id="cal-timeline"></div>
+    <div id="cal-view-all" style="display:none">
+      <div class="tw"><table><thead><tr><th>Data</th><th>Nome</th><th>Potencial</th><th>Linha</th><th>Pedidos até</th><th>Ações</th></tr></thead><tbody id="cal-tbody"></tbody></table></div>
     </div>
   </div>
 
