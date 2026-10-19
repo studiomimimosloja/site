@@ -819,6 +819,29 @@ body > *{ position:relative; z-index:1; }
   </div>
 </footer>
 
+<!-- ══ POPUP DE NATAL (abre uma vez por visita, só na temporada) ══ -->
+<div id="natal-popup" class="np-overlay" role="dialog" aria-modal="true" aria-labelledby="np-titulo" hidden>
+  <div class="np-card">
+    <button type="button" class="np-x" id="np-fechar" aria-label="Fechar">&times;</button>
+    <svg class="np-noel" viewBox="0 0 120 120" aria-hidden="true">
+      <circle cx="60" cy="74" r="26" fill="#f6d9c0"/>
+      <path d="M32 78Q30 112 60 116Q90 112 88 78Q76 92 60 90Q44 92 32 78Z" fill="#fff"/>
+      <ellipse cx="51" cy="86" rx="10" ry="6" fill="#fff"/><ellipse cx="69" cy="86" rx="10" ry="6" fill="#fff"/>
+      <circle cx="60" cy="80" r="4.5" fill="#e8a58f"/>
+      <circle cx="50" cy="71" r="2.6" fill="#2a2540"/><circle cx="70" cy="71" r="2.6" fill="#2a2540"/>
+      <circle cx="42" cy="78" r="4" fill="#e8a58f" opacity=".5"/><circle cx="78" cy="78" r="4" fill="#e8a58f" opacity=".5"/>
+      <path d="M24 56Q34 8 66 12Q94 14 98 44Z" fill="#c25563"/>
+      <rect x="18" y="50" width="84" height="17" rx="8.5" fill="#fff"/>
+      <circle cx="98" cy="42" r="9" fill="#fff"/>
+    </svg>
+    <div class="np-eyebrow">Coleção de Natal</div>
+    <h2 id="np-titulo">Ho ho ho! O Natal chegou na MiMimos</h2>
+    <p>Enfeites, lembrancinhas e presentes natalinos personalizados, feitos sob encomenda com o nome que você quiser.</p>
+    <a class="np-btn" id="np-ver" href="#natal">Ver coleção de Natal</a>
+    <button type="button" class="np-depois" id="np-depois">Agora não</button>
+  </div>
+</div>
+
 <script src="assets/js/main.js"></script>
 </body>
 </html>

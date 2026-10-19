@@ -1051,6 +1051,7 @@ function toggleFaq(btn) {
         else grid.appendChild(buildCard(item.product, 'Natal', i));
       });
       sec.style.display = '';
+      abrirPopupNatal();
 
       var btn = document.getElementById('natal-ver-tudo');
       var nomeCat = Object.keys(CAT_IDS).filter(ehNatal)[0];
@@ -1062,6 +1063,39 @@ function toggleFaq(btn) {
         var cat = document.getElementById('catalogo');
         if (cat) cat.scrollIntoView({ behavior: 'smooth' });
       };
+    }
+
+    // Popup de Natal: abre uma vez por visita (aba), só quando a vitrine está no ar.
+    function abrirPopupNatal() {
+      var pop = document.getElementById('natal-popup');
+      if (!pop || !pop.hidden) return;
+      try { if (sessionStorage.getItem('mimimos-natal-popup')) return; } catch(e) {}
+      var ultimoFoco = null;
+      function fechar() {
+        pop.classList.remove('np-aberto');
+        setTimeout(function() { pop.hidden = true; }, 250);
+        document.removeEventListener('keydown', aoTeclar);
+        try { sessionStorage.setItem('mimimos-natal-popup', '1'); } catch(e) {}
+        if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
+      }
+      function aoTeclar(e) { if (e.key === 'Escape') fechar(); }
+      setTimeout(function() {
+        ultimoFoco = document.activeElement;
+        pop.hidden = false;
+        requestAnimationFrame(function() { pop.classList.add('np-aberto'); });
+        document.addEventListener('keydown', aoTeclar);
+        var ver = document.getElementById('np-ver');
+        if (ver) ver.focus();
+      }, 1500);
+      document.getElementById('np-fechar').onclick = fechar;
+      document.getElementById('np-depois').onclick = fechar;
+      pop.addEventListener('click', function(e) { if (e.target === pop) fechar(); });
+      document.getElementById('np-ver').addEventListener('click', function(e) {
+        e.preventDefault();
+        fechar();
+        var v = document.getElementById('natal');
+        if (v) v.scrollIntoView({ behavior: 'smooth' });
+      });
     }
 
     function renderDestaques(data) {

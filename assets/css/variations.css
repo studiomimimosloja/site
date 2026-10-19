@@ -1083,3 +1083,28 @@
 @keyframes nat-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media (max-width:640px){ .natal-treno{width:120px; top:40px} }
 @media (prefers-reduced-motion:reduce){ .natal-luzes,.nf,.natal-treno,.natal-treno svg{animation:none} .nf,.natal-treno{display:none} }
+
+/* ══ POPUP DE NATAL ═════════════════════════════════════ */
+.np-overlay{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px;
+  background:rgba(42,37,64,.5); opacity:0; transition:opacity .25s ease}
+.np-overlay[hidden]{display:none}
+.np-overlay.np-aberto{opacity:1}
+.np-card{position:relative; max-width:400px; width:100%; text-align:center; padding:74px 28px 26px;
+  background:linear-gradient(180deg,#fbebed 0%,#fff 45%); border-radius:24px; border:2px solid rgba(224,162,59,.45);
+  box-shadow:0 24px 70px rgba(42,37,64,.35); transform:translateY(24px) scale(.94); transition:transform .4s cubic-bezier(.22,1.4,.36,1)}
+.np-aberto .np-card{transform:none}
+.np-noel{position:absolute; left:50%; top:-52px; width:104px; height:104px; margin-left:-52px;
+  background:#fff; border-radius:50%; border:3px solid #e0a23b; padding:4px; box-shadow:0 8px 22px rgba(194,85,99,.25);
+  animation:np-balanca 2.6s ease-in-out infinite}
+@keyframes np-balanca{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.np-x{position:absolute; top:10px; right:12px; width:34px; height:34px; border:0; border-radius:50%; cursor:pointer;
+  background:rgba(42,37,64,.07); color:#5b5570; font-size:1.5rem; line-height:1}
+.np-x:hover{background:rgba(42,37,64,.14)}
+.np-eyebrow{font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#a43f4e}
+.np-card h2{margin:8px 0 10px; font-size:1.55rem; line-height:1.2; color:#2a2540}
+.np-card p{margin:0 0 20px; color:#5b5570; font-size:.95rem; line-height:1.5}
+.np-btn{display:inline-block; padding:13px 28px; border-radius:999px; background:#c25563; color:#fff; font-weight:700; text-decoration:none;
+  transition:background .2s, transform .2s}
+.np-btn:hover{background:#a43f4e; transform:translateY(-2px)}
+.np-depois{display:block; margin:14px auto 0; border:0; background:none; cursor:pointer; color:#8a849b; font:inherit; font-size:.85rem; text-decoration:underline}
+@media (prefers-reduced-motion:reduce){ .np-noel{animation:none} .np-card,.np-overlay{transition:none} }
