@@ -296,6 +296,57 @@ body > *{ position:relative; z-index:1; }
   </div>
 </section>
 
+<!-- ══ VITRINE DE NATAL (temporária) ══════════════════
+     Aparece sozinha de outubro a dezembro, só se houver produtos na categoria
+     "Natal" do painel admin. Para tirar do ar: desative a categoria Natal. -->
+<section id="natal" class="natal-vitrine" aria-labelledby="natal-title" style="display:none">
+  <div class="natal-deco" aria-hidden="true">
+    <div class="natal-luzes natal-luzes--a"></div>
+    <div class="natal-luzes natal-luzes--b"></div>
+    <div class="natal-treno"><svg viewBox="0 0 320 100">
+      <defs><g id="natal-rd">
+        <path d="M14 34L2 46M20 36L12 48M38 36L50 46M44 34L58 42" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <ellipse cx="28" cy="28" rx="20" ry="10" fill="#a9763f"/><path d="M42 24L54 12L60 16L48 30Z" fill="#a9763f"/>
+        <ellipse cx="60" cy="13" rx="8" ry="6" fill="#a9763f"/><circle cx="8" cy="26" r="3" fill="#fff"/>
+        <path d="M58 8L56-2M56 2L50-2M61 7L65-3M63 2L69-2" stroke="#8a5a2b" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </g></defs>
+      <path d="M130 60Q160 52 200 52T290 44" stroke="#e0a23b" stroke-width="1.6" fill="none"/>
+      <use href="#natal-rd" transform="translate(150,28)"/><use href="#natal-rd" transform="translate(235,22)"/>
+      <circle cx="303" cy="35" r="2.8" fill="#c25563"/>
+      <path d="M10 88Q60 98 130 82Q142 79 138 70" stroke="#e0a23b" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <circle cx="34" cy="46" r="15" fill="#3f8a78"/><path d="M28 34Q34 30 40 34" stroke="#e0a23b" stroke-width="3" fill="none"/>
+      <path d="M20 52H130Q132 78 112 80H30Q16 76 20 52Z" fill="#c25563"/><path d="M20 59H130" stroke="#e0a23b" stroke-width="3"/>
+      <circle cx="90" cy="46" r="14" fill="#a43f4e"/><circle cx="94" cy="29" r="8" fill="#f6d9c0"/>
+      <ellipse cx="96" cy="35" rx="7" ry="6" fill="#fff"/><path d="M85 25Q94 4 107 22Z" fill="#a43f4e"/>
+      <rect x="85" y="22" width="22" height="4" rx="2" fill="#fff"/><circle cx="108" cy="21" r="3.5" fill="#fff"/>
+    </svg></div>
+    <span class="nf nf1">&#10052;&#xFE0E;</span><span class="nf nf2">&#10022;</span><span class="nf nf3">&#10052;&#xFE0E;</span>
+    <span class="nf nf4">&#10022;</span><span class="nf nf5">&#10052;&#xFE0E;</span><span class="nf nf6">&#10022;</span>
+    <span class="nf nf7">&#10052;&#xFE0E;</span><span class="nf nf8">&#10022;</span>
+  </div>
+  <div class="section-inner natal-inner">
+    <svg class="natal-orn natal-orn--l" viewBox="0 0 90 120" aria-hidden="true">
+      <polygon points="45,12 70,50 20,50" fill="#3f8a78"/><polygon points="45,32 78,76 12,76" fill="#357a69"/><polygon points="45,54 86,102 4,102" fill="#2e6c5c"/>
+      <rect x="39" y="102" width="12" height="14" rx="2" fill="#a9763f"/>
+      <polygon points="45,0 48,8 56,8 50,13 52,21 45,16 38,21 40,13 34,8 42,8" fill="#e0a23b"/>
+      <circle cx="40" cy="48" r="4" fill="#c25563"/><circle cx="56" cy="70" r="4.5" fill="#e0a23b"/><circle cx="32" cy="82" r="4.5" fill="#c25563"/><circle cx="58" cy="96" r="4" fill="#fbebed"/><circle cx="26" cy="98" r="3.5" fill="#e0a23b"/>
+    </svg>
+    <svg class="natal-orn natal-orn--r" viewBox="0 0 90 120" aria-hidden="true">
+      <path d="M45 6v14" stroke="#e0a23b" stroke-width="2.5" stroke-linecap="round"/><rect x="38" y="18" width="14" height="9" rx="2" fill="#e0a23b"/>
+      <circle cx="45" cy="64" r="36" fill="#c25563"/><ellipse cx="32" cy="48" rx="9" ry="14" fill="#fff" opacity=".22" transform="rotate(25 32 48)"/>
+      <path d="M10 62c12 10 22-8 35 2s23-8 35 2" stroke="#e0a23b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="45" cy="84" r="4" fill="#e0a23b"/><circle cx="30" cy="80" r="3" fill="#fbebed"/><circle cx="60" cy="82" r="3" fill="#fbebed"/>
+    </svg>
+    <div class="section-header center">
+      <div class="eyebrow">Coleção de Natal</div>
+      <h2 id="natal-title">Natal MiMimos</h2>
+      <p class="lead">Enfeites, lembrancinhas e presentes natalinos personalizados. Feitos sob encomenda, com o nome que você quiser.</p>
+    </div>
+    <div id="natal-grid" class="natal-grid"></div>
+    <div class="natal-more"><button type="button" class="natal-btn" id="natal-ver-tudo">Ver todos os produtos de Natal</button></div>
+  </div>
+</section>
+
 <!-- ══ DESTAQUES (produtos em promo/destaque) ══════ -->
 <!-- LEMBRETE: seção "Em destaque" temporariamente desativada a pedido do Math
      (catálogo ainda pequeno / itens apareciam aleatórios). Para REATIVAR quando

@@ -690,6 +690,7 @@ function toggleFaq(btn) {
         // Renderizar catálogo (na ordem escolhida, padrão = tradicional)
         renderCatalog(ordenarProdutos(produtosData, window._ordemCatalogo || 'tradicional'));
         renderHeroCarousel(produtosData);
+        renderNatal(produtosData);
 
         // Renderizar destaques
         // LEMBRETE: desativado a pedido do Math (catálogo pequeno). Para reativar,
@@ -1025,6 +1026,42 @@ function toggleFaq(btn) {
         timer = setInterval(next, 3500); // troca a cada 3,5s
       }
       if (slides.length > 1) restart();
+    }
+
+    // ── Vitrine de Natal (temporária) ──
+    // Pega os produtos da categoria "Natal" do admin e mostra numa vitrine no topo.
+    // Só aparece de outubro a dezembro e se houver produto; fora disso fica escondida.
+    function renderNatal(data) {
+      var sec = document.getElementById('natal');
+      var grid = document.getElementById('natal-grid');
+      if (!sec || !grid) return;
+      var mes = new Date().getMonth() + 1;
+      var ehNatal = function(c) { return String(c || '').trim().toLowerCase() === 'natal'; };
+      var prods = (data || []).filter(function(p) {
+        if (ehNatal(p.categoria) || ehNatal(p.subcategoria)) return true;
+        var extras = p.categorias_extras;
+        if (typeof extras === 'string') { try { extras = JSON.parse(extras); } catch(e) { extras = []; } }
+        return (Array.isArray(extras) ? extras : []).some(function(x) { return x && (ehNatal(x.categoria) || ehNatal(x.subcategoria)); });
+      }).map(function(p) { return Object.assign({}, p, { _subs: [] }); });
+      if (mes < 10 || !prods.length) { sec.style.display = 'none'; return; }
+
+      while (grid.firstChild) grid.removeChild(grid.firstChild);
+      groupProducts(prods).forEach(function(item, i) {
+        if (item.type === 'group') grid.appendChild(buildGroupCard(item.variants, 'Natal', i));
+        else grid.appendChild(buildCard(item.product, 'Natal', i));
+      });
+      sec.style.display = '';
+
+      var btn = document.getElementById('natal-ver-tudo');
+      var nomeCat = Object.keys(CAT_IDS).filter(ehNatal)[0];
+      if (!btn) return;
+      if (!nomeCat) { btn.style.display = 'none'; return; }
+      btn.onclick = function() {
+        var tab = document.querySelector('[aria-controls="' + CAT_IDS[nomeCat] + '"]');
+        if (tab) showCat(CAT_IDS[nomeCat], tab);
+        var cat = document.getElementById('catalogo');
+        if (cat) cat.scrollIntoView({ behavior: 'smooth' });
+      };
     }
 
     function renderDestaques(data) {

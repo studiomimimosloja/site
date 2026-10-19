@@ -1017,3 +1017,69 @@
 .desc-toggle[aria-expanded="true"]::after { transform: rotate(180deg); }
 .desc-toggle:hover { background: var(--accent, var(--teal)); color: #fff; }
 .desc-toggle[hidden] { display: none; }
+
+
+/* ══ VITRINE DE NATAL (temporária) ══════════════════════
+   Vermelho, verde e dourado no mesmo tom suave das cores do site
+   (derivados do rosa, do verde-água e do âmbar). */
+.natal-vitrine{
+  --nat-red:#c25563; --nat-red-d:#a43f4e; --nat-red-l:#fbebed;
+  --nat-green:#3f8a78; --nat-green-l:#e5f1ec;
+  --nat-gold:#e0a23b; --nat-gold-l:#fcf3e3;
+  position:relative; padding:84px 24px 64px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(224,162,59,.14) 0 3px, transparent 4px),
+    radial-gradient(circle at 88% 30%, rgba(224,162,59,.12) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 82%, rgba(194,85,99,.10) 0 3px, transparent 4px),
+    radial-gradient(circle at 25% 76%, rgba(63,138,120,.12) 0 2px, transparent 3px),
+    linear-gradient(180deg, var(--nat-red-l) 0%, var(--cream) 55%, var(--nat-green-l) 100%);
+  border-top:4px solid transparent;
+  border-image:repeating-linear-gradient(90deg, var(--nat-red) 0 28px, var(--cream) 28px 40px, var(--nat-green) 40px 68px, var(--cream) 68px 80px) 1;
+}
+.natal-vitrine .eyebrow{color:var(--nat-red-d)}
+.natal-vitrine .section-header h2{color:var(--dark)}
+.natal-vitrine .section-header h2::after{
+  content:''; display:block; width:56px; height:3px; margin:12px auto 0; border-radius:3px;
+  background:linear-gradient(90deg, var(--nat-red), var(--nat-gold), var(--nat-green));
+}
+.natal-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:28px}
+.natal-grid .product-card{border-color:rgba(224,162,59,.35); box-shadow:0 4px 24px rgba(194,85,99,.08)}
+.natal-grid .product-card:hover{box-shadow:0 16px 40px rgba(194,85,99,.16)}
+.natal-grid .product-cat{color:var(--nat-red-d)}
+.natal-more{text-align:center; margin-top:36px}
+.natal-btn{
+  font:inherit; font-weight:700; font-size:.95rem; cursor:pointer; color:#fff;
+  background:var(--nat-red); border:0; border-radius:999px; padding:13px 28px;
+  transition:background .2s, transform .2s var(--ease);
+}
+.natal-btn:hover{background:var(--nat-red-d); transform:translateY(-2px)}
+@media (max-width:640px){
+  .natal-vitrine{padding:52px 16px 48px}
+  .natal-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px}
+}
+
+.natal-vitrine{overflow:hidden}
+.natal-inner{position:relative}
+.natal-deco{position:absolute; inset:0; pointer-events:none; z-index:0}
+.natal-inner{z-index:1}
+.natal-luzes{position:absolute; left:0; right:0; top:0; height:34px; background-repeat:repeat-x; background-size:80px 34px}
+.natal-luzes--a{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='34' viewBox='0 0 80 34'><path d='M0 8Q20 20 40 8T80 8' stroke='%23357a69' stroke-width='1.6' fill='none'/><circle cx='10' cy='18' r='5.4' fill='%23c25563'/><rect x='8' y='12' width='4' height='4' rx='1' fill='%23a9763f'/><circle cx='30' cy='24' r='5.4' fill='%23e0a23b'/><rect x='28' y='18' width='4' height='4' rx='1' fill='%23a9763f'/><circle cx='50' cy='18' r='5.4' fill='%233f8a78'/><rect x='48' y='12' width='4' height='4' rx='1' fill='%23a9763f'/><circle cx='70' cy='24' r='5.4' fill='%23e0a23b'/><rect x='68' y='18' width='4' height='4' rx='1' fill='%23a9763f'/></svg>");animation:nat-pisca 1.3s ease-in-out infinite}
+.natal-luzes--b{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='34' viewBox='0 0 80 34'><path d='M0 8Q20 20 40 8T80 8' stroke='%23357a69' stroke-width='1.6' fill='none'/><circle cx='10' cy='18' r='5.4' fill='%23e0a23b'/><rect x='8' y='12' width='4' height='4' rx='1' fill='%23a9763f'/><circle cx='30' cy='24' r='5.4' fill='%23c25563'/><rect x='28' y='18' width='4' height='4' rx='1' fill='%23a9763f'/><circle cx='50' cy='18' r='5.4' fill='%23e0a23b'/><rect x='48' y='12' width='4' height='4' rx='1' fill='%23a9763f'/><circle cx='70' cy='24' r='5.4' fill='%233f8a78'/><rect x='68' y='18' width='4' height='4' rx='1' fill='%23a9763f'/></svg>");animation:nat-pisca 1.3s ease-in-out infinite reverse}
+@keyframes nat-pisca{0%,100%{opacity:1; filter:drop-shadow(0 0 5px rgba(224,162,59,.95))}50%{opacity:.06; filter:none}}
+.nf{position:absolute; top:-30px; color:var(--nat-gold); opacity:.5; font-size:20px; animation:nat-cai 16s linear infinite}
+.nf1{left:6%; animation-delay:0s}   .nf2{left:18%; animation-delay:-5s; font-size:14px; color:var(--nat-red)}
+.nf3{left:31%; animation-delay:-9s; color:var(--nat-green)} .nf4{left:44%; animation-delay:-2s; font-size:12px}
+.nf5{left:57%; animation-delay:-12s; color:var(--nat-red)}  .nf6{left:69%; animation-delay:-7s; font-size:16px; color:var(--nat-green)}
+.nf7{left:81%; animation-delay:-14s}                         .nf8{left:93%; animation-delay:-4s; font-size:14px; color:var(--nat-red)}
+@keyframes nat-cai{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(900px) rotate(180deg)}}
+.natal-orn{position:absolute; top:4px; width:64px; height:auto}
+.natal-orn--l{left:calc(50% - 380px)} .natal-orn--r{right:calc(50% - 380px)}
+.natal-grid .product-card{--accent:var(--nat-red); --accent-d:var(--nat-red-d); --accent-l:var(--nat-red-l)}
+.natal-more::before{content:"✦   ❄︎   ✦"; display:block; margin-bottom:18px; letter-spacing:.3em; color:var(--nat-gold); font-size:1rem}
+@media (max-width:860px){ .natal-orn{display:none} }
+.natal-treno{position:absolute; top:44px; left:0; width:190px; opacity:.5; animation:nat-voa 38s linear infinite 3s}
+.natal-treno svg{display:block; width:100%; height:auto; animation:nat-bob 3.2s ease-in-out infinite}
+@keyframes nat-voa{0%{transform:translateX(-240px)}72%,100%{transform:translateX(calc(100vw + 40px))}}
+@keyframes nat-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (max-width:640px){ .natal-treno{width:120px; top:40px} }
+@media (prefers-reduced-motion:reduce){ .natal-luzes,.nf,.natal-treno,.natal-treno svg{animation:none} .nf,.natal-treno{display:none} }
