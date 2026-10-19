@@ -1275,3 +1275,130 @@ function carregarPrecosFaixa(p) {
     if(box) box.style.display = "none";
   }
 }
+
+
+// ════════════════════════════════════════════════════
+// TAREFAS PENDENTES (tabela privada "tarefas": só quem está logado lê e escreve)
+// ════════════════════════════════════════════════════
+TABLES['tar'] = { table: "tarefas", label: "Tarefa", order: "id.asc" };
+
+var TAR_GRUPOS = ['Natal', 'Catálogo', 'Marca e site', 'WhatsApp', 'Planejamento', 'Técnico', 'Segurança', 'Organização'];
+var TAR_PESO = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
+var TAR_PRIO_CLASS = { 'Alta': 'bp-h', 'Média': 'bp-n', 'Baixa': 'bp-c' };
+var tarFiltro = 'abertas';
+var tarGrupo = '';
+
+FORM_FIELDS['tar'] = [
+  { id: 'g-titulo', label: 'Tarefa *', type: 'text', field: 'titulo', required: true },
+  { id: 'g-grupo', label: 'Grupo', type: 'select', field: 'grupo', opts: TAR_GRUPOS, def: 'Planejamento' },
+  { id: 'g-prio', label: 'Prioridade', type: 'select', field: 'prioridade', opts: ['Alta', 'Média', 'Baixa'], def: 'Média' },
+  { id: 'g-status', label: 'Situação', type: 'select', field: 'status', opts: ['A fazer', 'Fazendo', 'Feito'], def: 'A fazer' },
+  { id: 'g-prazo', label: 'Prazo (opcional, ex: 13/12)', type: 'text', field: 'prazo' },
+  { id: 'g-obs', label: 'Observações', type: 'textarea', field: 'observacoes' }
+];
+
+var origRenderGen2 = renderGeneric;
+renderGeneric = function(section) {
+  if (section === 'tar') { renderTar(); return; }
+  origRenderGen2(section);
+};
+
+function setTarFiltro(f) {
+  tarFiltro = f;
+  ['abertas', 'feitas', 'todas'].forEach(function(v) {
+    var b = document.getElementById('tf-' + v);
+    if (b) b.classList.toggle('active', v === f);
+  });
+  renderTar();
+}
+
+function setTarGrupo(g) {
+  tarGrupo = g;
+  renderTar();
+}
+
+function renderTar() {
+  var box = document.getElementById('tar-lista');
+  if (!box) return;
+  var todas = genericData['tar'] || [];
+
+  // filtro de grupo (só mostra os grupos que existem)
+  var sel = document.getElementById('tar-grupo');
+  if (sel && !sel.getAttribute('data-ok')) {
+    sel.innerHTML = '<option value="">Todos os grupos</option>' + TAR_GRUPOS.map(function(g) {
+      return '<option value="' + esc(g) + '">' + esc(g) + '</option>';
+    }).join('');
+    sel.setAttribute('data-ok', '1');
+  }
+
+  var abertas = todas.filter(function(t) { return t.status !== 'Feito'; }).length;
+  var resumo = document.getElementById('tar-resumo');
+  if (resumo) resumo.textContent = abertas + ' em aberto · ' + (todas.length - abertas) + ' feitas';
+
+  var lista = todas.filter(function(t) {
+    var feita = t.status === 'Feito';
+    if (tarFiltro === 'abertas' && feita) return false;
+    if (tarFiltro === 'feitas' && !feita) return false;
+    if (tarGrupo && t.grupo !== tarGrupo) return false;
+    return true;
+  });
+
+  if (!lista.length) {
+    box.innerHTML = '<div class="es"><span>✅</span>' + (todas.length ? 'Nada por aqui com esse filtro' : 'Nenhuma tarefa cadastrada') + '</div>';
+    return;
+  }
+
+  var porGrupo = {};
+  lista.forEach(function(t) {
+    var g = t.grupo || 'Planejamento';
+    (porGrupo[g] = porGrupo[g] || []).push(t);
+  });
+  var ordemGrupos = TAR_GRUPOS.filter(function(g) { return porGrupo[g]; })
+    .concat(Object.keys(porGrupo).filter(function(g) { return TAR_GRUPOS.indexOf(g) < 0; }));
+
+  box.innerHTML = ordemGrupos.map(function(g) {
+    var itens = porGrupo[g].sort(function(a, b) {
+      var fa = a.status === 'Feito' ? 1 : 0, fb = b.status === 'Feito' ? 1 : 0;
+      if (fa !== fb) return fa - fb;
+      var pa = TAR_PESO[a.prioridade] !== undefined ? TAR_PESO[a.prioridade] : 1;
+      var pb = TAR_PESO[b.prioridade] !== undefined ? TAR_PESO[b.prioridade] : 1;
+      if (pa !== pb) return pa - pb;
+      return (a.id || 0) - (b.id || 0);
+    });
+    return '<div class="tar-grupo"><div class="tar-grupo-nome">' + esc(g) + ' <span>' + itens.length + '</span></div>'
+      + itens.map(function(t) {
+        var feita = t.status === 'Feito';
+        return '<div class="tar-row' + (feita ? ' tar-feita' : '') + '">'
+          + '<button class="tar-chk" data-tar="toggle" data-id="' + t.id + '" title="' + (feita ? 'Reabrir' : 'Marcar como feita') + '">' + (feita ? '✓' : '') + '</button>'
+          + '<div class="tar-main"><div class="tar-tit">' + esc(t.titulo) + '</div>'
+          + (t.observacoes ? '<div class="tar-obs">' + esc(t.observacoes) + '</div>' : '') + '</div>'
+          + '<div class="tar-meta">'
+          + (t.status === 'Fazendo' ? '<span class="bp bp-p">Fazendo</span>' : '')
+          + (!feita && t.prioridade ? '<span class="bp ' + (TAR_PRIO_CLASS[t.prioridade] || 'bp-c') + '">' + esc(t.prioridade) + '</span>' : '')
+          + (t.prazo ? '<span class="tar-prazo">📅 ' + esc(t.prazo) + '</span>' : '')
+          + '</div>'
+          + '<div class="tar-acoes">'
+          + '<button class="cal-btn" data-tar="edit" data-id="' + t.id + '">Editar</button>'
+          + '<button class="cal-btn cal-btn-del" data-tar="del" data-id="' + t.id + '">Excluir</button>'
+          + '</div></div>';
+      }).join('')
+      + '</div>';
+  }).join('');
+}
+
+document.addEventListener('click', function(e) {
+  var el = e.target.closest ? e.target.closest('[data-tar]') : null;
+  if (!el) return;
+  var acao = el.getAttribute('data-tar');
+  var id = el.getAttribute('data-id');
+  if (acao === 'edit') editGeneric('tar', id);
+  else if (acao === 'del') delGeneric('tar', id);
+  else if (acao === 'toggle') {
+    var t = (genericData['tar'] || []).find(function(x) { return x.id == id; });
+    if (!t) return;
+    var novo = t.status === 'Feito' ? 'A fazer' : 'Feito';
+    supa('PATCH', 'tarefas?id=eq.' + id, { status: novo }).then(function() {
+      loadGeneric('tar');
+    }).catch(function(err) { toast('Erro: ' + err.message, 'err'); });
+  }
+});

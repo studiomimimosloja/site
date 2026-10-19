@@ -170,6 +170,21 @@ tr:hover td{background:var(--bg)}
 .cal-det{font-size:.8rem;color:var(--mid);background:var(--bg);border-radius:10px;padding:10px 12px;line-height:1.5}
 .cal-det p{margin:0 0 6px}
 .cal-det p:last-child{margin-bottom:0}
+.tar-grupo{margin-bottom:18px}
+.tar-grupo-nome{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sf);margin-bottom:8px}
+.tar-grupo-nome span{font-weight:500;margin-left:4px}
+.tar-row{display:flex;align-items:center;gap:12px;background:var(--w);border:1px solid var(--ln);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.tar-chk{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--sf);background:none;cursor:pointer;color:#fff;font-size:.8rem;line-height:1;font-family:inherit}
+.tar-chk:hover{border-color:var(--t)}
+.tar-feita .tar-chk{background:var(--t);border-color:var(--t)}
+.tar-feita .tar-tit{text-decoration:line-through;color:var(--sf)}
+.tar-main{flex:1;min-width:0}
+.tar-tit{font-size:.9rem;font-weight:600;color:var(--dk)}
+.tar-obs{font-size:.78rem;color:var(--mid);margin-top:2px;line-height:1.4}
+.tar-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.tar-prazo{font-size:.74rem;color:var(--mid);white-space:nowrap}
+.tar-acoes{display:flex;gap:6px}
+@media (max-width:720px){.tar-row{flex-wrap:wrap}.tar-meta{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -200,6 +215,7 @@ tr:hover td{background:var(--bg)}
     <button class="ni" onclick="showP('banners',this)">🎯 Banners</button>
     <button class="ni" onclick="showP('badges',this)">🏷️ Badges</button>
     <button class="ni" onclick="showP('cal',this)">📅 Calendário</button>
+    <button class="ni" onclick="showP('tar',this)">✅ Tarefas</button>
     <button class="ni" onclick="showP('orc',this)">🧾 Orçamentos</button>
     <button class="ni" onclick="showP('config',this)">⚙️ Config</button>
   </nav>
@@ -288,6 +304,24 @@ tr:hover td{background:var(--bg)}
     <div id="cal-view-all" style="display:none">
       <div class="tw"><table><thead><tr><th>Data</th><th>Nome</th><th>Potencial</th><th>Linha</th><th>Pedidos até</th><th>Ações</th></tr></thead><tbody id="cal-tbody"></tbody></table></div>
     </div>
+  </div>
+
+  <!-- TAREFAS PENDENTES -->
+  <div id="panel-tar" style="display:none">
+    <h2 style="font-size:1.3rem;font-weight:600;margin-bottom:6px">✅ Tarefas <span id="tar-cnt" style="font-size:.85rem;color:var(--sf);font-weight:400"></span></h2>
+    <p style="font-size:.82rem;color:var(--sf);margin-bottom:16px"><span id="tar-resumo"></span>. Clique no círculo para marcar como feita.</p>
+    <div class="tb">
+      <div class="tb-l" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:10px">
+          <button class="cal-view-btn active" id="tf-abertas" onclick="setTarFiltro('abertas')">Em aberto</button>
+          <button class="cal-view-btn" id="tf-feitas" onclick="setTarFiltro('feitas')">Feitas</button>
+          <button class="cal-view-btn" id="tf-todas" onclick="setTarFiltro('todas')">Todas</button>
+        </div>
+        <select class="fx" id="tar-grupo" onchange="setTarGrupo(this.value)" style="width:auto;min-width:160px"></select>
+      </div>
+      <button class="ba" onclick="openModal('tar')">+ Nova tarefa</button>
+    </div>
+    <div id="tar-lista"></div>
   </div>
 
   <!-- BANNERS -->
