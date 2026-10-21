@@ -987,9 +987,11 @@ function toggleFaq(btn) {
         var slide = document.createElement('div');
         slide.className = 'hero-carousel-slide' + (i === 0 ? ' active' : '');
         var img = document.createElement('img');
-        img.src = item.foto;
+        // Só as 2 primeiras fotos carregam na abertura; as outras, quando chega a vez delas
+        if (i < 2) { img.src = item.foto; } else { img.setAttribute('data-src', item.foto); }
+        if (i === 0) { img.setAttribute('fetchpriority', 'high'); } else { img.loading = 'lazy'; }
+        img.decoding = 'async';
         img.alt = item.nome;
-        img.loading = 'lazy';
         slide.appendChild(img);
         if (item.nome) {
           var cap = document.createElement('div');
@@ -1012,10 +1014,15 @@ function toggleFaq(btn) {
       var current = 0;
       var timer = null;
 
+      function carregarSlide(n) {
+        var im = slides[(n + slides.length) % slides.length].querySelector('img[data-src]');
+        if (im) { im.src = im.getAttribute('data-src'); im.removeAttribute('data-src'); }
+      }
       function goToSlide(idx) {
         slides[current].classList.remove('active');
         if (dots[current]) dots[current].classList.remove('active');
         current = (idx + slides.length) % slides.length;
+        carregarSlide(current); carregarSlide(current + 1);
         slides[current].classList.add('active');
         if (dots[current]) dots[current].classList.add('active');
         restart();

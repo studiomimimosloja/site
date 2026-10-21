@@ -257,10 +257,89 @@ var fotoFile = null;
 var extraFotos = []; // [{url:'...', file: File|null, isNew: bool}]
 var extraUploadQueue = [];
 
+// ── FOTOS LEVES ──
+// Toda foto é reduzida (lado maior até 1200px) e convertida para WebP antes de subir,
+// com cache longo no navegador. Uma foto de 2 MB vira algo perto de 100 KB.
+var FOTO_LADO_MAX = 1200, FOTO_QUALIDADE = 0.82;
+
+function otimizarFoto(blob) {
+  return createImageBitmap(blob).then(function(bmp) {
+    var esc = Math.min(1, FOTO_LADO_MAX / Math.max(bmp.width, bmp.height));
+    var c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * esc);
+    c.height = Math.round(bmp.height * esc);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    return new Promise(function(res, rej) {
+      c.toBlob(function(b) { b ? res(b) : rej(new Error("Não consegui converter a foto.")); }, "image/webp", FOTO_QUALIDADE);
+    });
+  });
+}
+
+function subirFoto(blob, prefixo) {
+  return otimizarFoto(blob).then(function(leve) {
+    var nome = prefixo + "_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6) + ".webp";
+    return fetch(SUPA_URL + "/storage/v1/object/produtos/" + nome, {
+      method: "POST",
+      headers: {
+        "apikey": SUPA_KEY,
+        "Authorization": "Bearer " + (sessionToken || SUPA_KEY),
+        "Content-Type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "x-upsert": "true"
+      },
+      body: leve
+    }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t){ throw new Error(t); });
+      return SUPA_URL + "/storage/v1/object/public/produtos/" + nome;
+    });
+  });
+}
+
+// Foto que ainda não foi otimizada: base64 dentro do produto, ou arquivo do bucket que não é .webp
+function fotoPesada(u) {
+  if (!u || typeof u !== "string") return false;
+  if (u.indexOf("data:") === 0) return true;
+  return u.indexOf("/storage/v1/object/public/produtos/") > 0 && !/\.webp(\?|$)/i.test(u);
+}
+
+// Converte as fotos já cadastradas, produto por produto (aba Config)
+function otimizarFotosExistentes() {
+  var btn = document.getElementById("otm-btn");
+  var info = document.getElementById("otm-info");
+  var lista = produtos.filter(function(p) {
+    var ex = p.fotos_extras || [];
+    if (typeof ex === "string") { try { ex = JSON.parse(ex); } catch(e) { ex = []; } }
+    return fotoPesada(p.foto_url) || ex.some(fotoPesada);
+  });
+  if (!lista.length) { info.textContent = "Todas as fotos já estão otimizadas."; return; }
+  if (!confirm("Otimizar as fotos de " + lista.length + " produto(s)? Leva alguns minutos. Não feche esta página até terminar.")) return;
+  btn.disabled = true;
+  var feitos = 0, erros = 0;
+  var trocar = function(u) {
+    if (!fotoPesada(u)) return Promise.resolve(u);
+    return fetch(u).then(function(r) { return r.blob(); }).then(function(b) { return subirFoto(b, "otm"); });
+  };
+  lista.reduce(function(fila, p) {
+    return fila.then(function() {
+      info.textContent = "Otimizando " + (feitos + erros + 1) + " de " + lista.length + ": " + (p.nome || "");
+      var ex = p.fotos_extras || [];
+      if (typeof ex === "string") { try { ex = JSON.parse(ex); } catch(e) { ex = []; } }
+      return Promise.all([trocar(p.foto_url)].concat(ex.map(trocar))).then(function(urls) {
+        return supa("PATCH", "produtos?id=eq." + p.id, { foto_url: urls[0], fotos_extras: urls.slice(1) });
+      }).then(function() { feitos++; }).catch(function(e) { erros++; console.error("Foto de " + p.nome, e); });
+    });
+  }, Promise.resolve()).then(function() {
+    btn.disabled = false;
+    info.textContent = "Pronto: " + feitos + " produto(s) otimizado(s)" + (erros ? ", " + erros + " com erro (tente de novo)." : ".");
+    toast("Fotos otimizadas!", "ok");
+    loadAll();
+  });
+}
+
 function handleF(input) {
   var file = input.files[0];
   if (!file) return;
-  if (file.size > 5*1024*1024) { toast("Foto muito grande (max 5MB)","err"); return; }
+  if (file.size > 20*1024*1024) { toast("Foto muito grande (max 20MB)","err"); return; }
   fotoFile = file;
   var reader = new FileReader();
   reader.onload = function(e) {
@@ -274,24 +353,13 @@ function handleF(input) {
 
 function uploadFoto() {
   return new Promise(function(resolve, reject) {
-    if (!fotoFile) { resolve(fotoB64 || ""); return; }
-    var ext = fotoFile.name.split(".").pop().toLowerCase();
-    var fileName = "prod_" + Date.now() + "." + ext;
-    var mime = fotoFile.type || "image/jpeg";
-    fetch(SUPA_URL + "/storage/v1/object/produtos/" + fileName, {
-      method: "POST",
-      headers: {
-        "apikey": SUPA_KEY,
-        "Authorization": "Bearer " + (sessionToken || SUPA_KEY),
-        "Content-Type": mime,
-        "x-upsert": "true"
-      },
-      body: fotoFile
-    }).then(function(r) {
-      if (!r.ok) return r.text().then(function(t){ throw new Error(t); });
-      var publicUrl = SUPA_URL + "/storage/v1/object/public/produtos/" + fileName;
-      resolve(publicUrl);
-    }).catch(function(e) { reject(e); });
+    if (fotoFile) { subirFoto(fotoFile, "prod").then(resolve, reject); return; }
+    // foto antiga guardada como base64 dentro do produto: vira arquivo leve ao salvar
+    if (fotoB64 && fotoB64.indexOf("data:") === 0) {
+      fetch(fotoB64).then(function(r) { return r.blob(); }).then(function(b) { return subirFoto(b, "prod"); }).then(resolve, reject);
+      return;
+    }
+    resolve(fotoB64 || "");
   });
 }
 
@@ -302,7 +370,7 @@ function handleExtraFoto(input) {
   var allowed = ['image/jpeg','image/png','image/webp'];
   for (var i = 0; i < files.length; i++) {
     var f = files[i];
-    if (f.size > 5*1024*1024) { toast("Foto '" + f.name + "' muito grande (max 5MB)","err"); continue; }
+    if (f.size > 20*1024*1024) { toast("Foto '" + f.name + "' muito grande (max 20MB)","err"); continue; }
     if (allowed.indexOf(f.type) < 0) { toast("Formato inválido: " + f.name,"err"); continue; }
     (function(file) {
       var reader = new FileReader();
@@ -350,21 +418,7 @@ function uploadExtraFotos() {
   }
   var promises = extraFotos.map(function(foto) {
     if (!foto.isNew || !foto.file) return Promise.resolve(foto.url);
-    var ext = foto.file.name.split(".").pop().toLowerCase();
-    var fileName = "extra_" + Date.now() + "_" + Math.random().toString(36).substring(2,6) + "." + ext;
-    return fetch(SUPA_URL + "/storage/v1/object/produtos/" + fileName, {
-      method: "POST",
-      headers: {
-        "apikey": SUPA_KEY,
-        "Authorization": "Bearer " + (sessionToken || SUPA_KEY),
-        "Content-Type": foto.file.type || "image/jpeg",
-        "x-upsert": "true"
-      },
-      body: foto.file
-    }).then(function(r) {
-      if (!r.ok) return r.text().then(function(t){ throw new Error(t); });
-      return SUPA_URL + "/storage/v1/object/public/produtos/" + fileName;
-    });
+    return subirFoto(foto.file, "extra");
   });
   return Promise.all(promises);
 }
@@ -855,7 +909,7 @@ function closeGenModal() {
 function handleGenFile(input, fieldId) {
   var file = input.files[0];
   if (!file) return;
-  if (file.size > 5*1024*1024) { toast("Foto muito grande (max 5MB)","err"); return; }
+  if (file.size > 20*1024*1024) { toast("Foto muito grande (max 20MB)","err"); return; }
   var allowed = ['image/jpeg','image/png','image/webp'];
   if (allowed.indexOf(file.type) < 0) { toast("Formato inválido. Use JPG, PNG ou WEBP.","err"); return; }
   genFotoFile = file;
@@ -873,21 +927,7 @@ function handleGenFile(input, fieldId) {
 function uploadGenFoto(folder) {
   return new Promise(function(resolve, reject) {
     if (!genFotoFile) { resolve(genFotoB64 || ""); return; }
-    var ext = genFotoFile.name.split(".").pop().toLowerCase();
-    var fileName = folder + "_" + Date.now() + "." + ext;
-    fetch(SUPA_URL + "/storage/v1/object/produtos/" + fileName, {
-      method: "POST",
-      headers: {
-        "apikey": SUPA_KEY,
-        "Authorization": "Bearer " + (sessionToken || SUPA_KEY),
-        "Content-Type": genFotoFile.type || "image/jpeg",
-        "x-upsert": "true"
-      },
-      body: genFotoFile
-    }).then(function(r) {
-      if (!r.ok) return r.text().then(function(t){ throw new Error(t); });
-      resolve(SUPA_URL + "/storage/v1/object/public/produtos/" + fileName);
-    }).catch(reject);
+    subirFoto(genFotoFile, folder).then(resolve, reject);
   });
 }
 
