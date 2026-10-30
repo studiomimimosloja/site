@@ -44,7 +44,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Nunito+Sans:wght@300;400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/variations.css">
+<link rel="stylesheet" href="assets/css/variations.css?v=20261030">
 <style>
 /* ── Textura de fundo: padrão de pontinhos delicados (papelaria artesanal) ── */
 body{ background-color:var(--bg); }
@@ -198,12 +198,6 @@ body > *{ position:relative; z-index:1; }
   cursor:pointer; transition:all .3s ease;
 }
 .hero-carousel-dots span.active{ background:#2ECFC4; width:22px; }
-.hero-carousel::before{
-  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
-  border:2px solid rgba(46,207,196,.0); border-radius:24px;
-  animation:hcGlow 3s ease-in-out infinite;
-}
-@keyframes hcGlow{ 0%,100%{border-color:rgba(46,207,196,.0)} 50%{border-color:rgba(46,207,196,.5)} }
 @media (max-width:900px){
   .hero-frame{ max-width:340px; }
 }
@@ -258,7 +252,7 @@ body > *{ position:relative; z-index:1; }
 <section class="hero-v2" aria-label="Apresentação">
   <div class="hero-v2-inner">
     <div class="hero-v2-text">
-      <div class="hero-v2-tag">Studio MiMimos · Fortaleza, CE</div>
+      <p class="hero-v2-kicker">feito no nosso ateliê, em Fortaleza</p>
       <h1>Mimos e lembrancinhas<br><em class="hand-accent">feitos pra você</em></h1>
       <p>Personalizamos com nome, tema e cores — pra cada aniversário, presente ou data que merece um cuidado a mais. Inclusive em impressão 3D.</p>
       <div class="hero-v2-actions">
@@ -267,13 +261,16 @@ body > *{ position:relative; z-index:1; }
         </a>
         <a href="#catalogo" class="btn btn-outline">Ver catálogo</a>
       </div>
-      <div class="hero-v2-stats">
-      <div class="hero-v2-stat"><span class="hero-v2-stat-num">100%</span><span class="hero-v2-stat-label">Personalizado</span></div>
-      <div class="hero-v2-stat"><span class="hero-v2-stat-num">500+</span><span class="hero-v2-stat-label">Pedidos entregues</span></div>
-      <div class="hero-v2-stat"><span class="hero-v2-stat-num"><svg viewBox="0 0 24 24" fill="currentColor" style="width:1em;height:1em;display:inline-block;vertical-align:-2px;color:#F5C451"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7L12 2Z"/></svg> 5.0</span><span class="hero-v2-stat-label">Avaliação</span></div>
-      </div>
+      <ul class="hero-v2-feitos" aria-label="O que fazemos">
+        <li><a href="#catalogo">Lembrancinhas</a></li>
+        <li><a href="#catalogo">Kits e cestas</a></li>
+        <li><a href="#catalogo">Presentes</a></li>
+        <li><a href="#catalogo">Impressão 3D</a></li>
+      </ul>
     </div>
     <div class="hero-art">
+      <span class="hero-blob" aria-hidden="true"></span>
+      <span class="hero-dot" aria-hidden="true"></span>
       <div class="hero-frame">
         <span class="washi washi-l"></span>
         <span class="washi washi-r"></span>
@@ -281,7 +278,6 @@ body > *{ position:relative; z-index:1; }
         <div class="hero-carousel" id="hero-carousel" aria-label="Nossos produtos">
           <div class="hero-carousel-track" id="hero-carousel-track"></div>
           <div class="hero-carousel-dots" id="hero-carousel-dots"></div>
-          <span class="hero-chip"><span class="hero-chip-dot"></span>Feito à mão</span>
         </div>
       </div>
       <div class="hero-note">com todo o<br><em>carinho</em></div>
