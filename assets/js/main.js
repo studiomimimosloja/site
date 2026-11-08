@@ -255,7 +255,8 @@ function toggleFaq(btn) {
     // ── Lightbox: ampliar foto do produto ──
     var _lbPhotos = [];
     var _lbIdx = 0;
-    function lightboxOpen(photos, idx, nome) {
+    function lightboxOpen(photos, idx, nome, cat) {
+      if (window.track) track('view_product', { produto: nome || '', categoria: cat || '' });
       _lbPhotos = photos || [];
       _lbIdx = idx || 0;
       var box = document.getElementById('lightbox');
@@ -323,7 +324,7 @@ function toggleFaq(btn) {
     }
 
     // ── Helper: criar carrossel ou imagem simples ──
-    function buildImgArea(photos, altText) {
+    function buildImgArea(photos, altText, catName) {
       var imgDiv = el('div', {className:'product-img'});
 
       if (!photos.length) {
@@ -333,7 +334,7 @@ function toggleFaq(btn) {
 
       if (photos.length === 1) {
         var single = el('img', {src: photos[0], alt: altText || '', loading:'lazy', decoding:'async', width:'1200', height:'1200'});
-        single.addEventListener('click', function(){ lightboxOpen(photos, 0, altText); });
+        single.addEventListener('click', function(){ lightboxOpen(photos, 0, altText, catName); });
         imgDiv.appendChild(single);
         return { imgDiv: imgDiv, goTo: null };
       }
@@ -347,7 +348,7 @@ function toggleFaq(btn) {
       photos.forEach(function(src, si) {
         var slide = el('div', {className:'var-slide' + (si === 0 ? ' active' : '')});
         var slideImg = el('img', {src: src, alt: (altText || '') + ' — foto ' + (si+1), loading:'lazy', decoding:'async', width:'1200', height:'1200'});
-        slideImg.addEventListener('click', function(){ lightboxOpen(photos, currentIdx, altText); });
+        slideImg.addEventListener('click', function(){ lightboxOpen(photos, currentIdx, altText, catName); });
         slide.appendChild(slideImg);
         track.appendChild(slide);
 
@@ -397,7 +398,7 @@ function toggleFaq(btn) {
       if (i > 0) article.style.transitionDelay = (i * 0.08).toFixed(2) + 's';
 
       var photos = getPhotos(p);
-      var imgArea = buildImgArea(photos, p.nome || '');
+      var imgArea = buildImgArea(photos, p.nome || '', catName);
       var imgDiv = imgArea.imgDiv;
 
       var bc = BADGE_CLS[p.badge] || "";
@@ -458,7 +459,7 @@ function toggleFaq(btn) {
           var vImg = el('img', {src: v.foto_url, alt: v.nome || '', loading:'lazy', decoding:'async', width:'1200', height:'1200'});
           vImg.addEventListener('click', function(){
             var idx = _varFotos.indexOf(v.foto_url);
-            lightboxOpen(_varFotos, idx < 0 ? 0 : idx, v.nome || '');
+            lightboxOpen(_varFotos, idx < 0 ? 0 : idx, v.nome || '', catName);
           });
           slide.appendChild(vImg);
         } else {
@@ -830,7 +831,10 @@ function toggleFaq(btn) {
         tab.setAttribute('aria-controls', secId);
         var cor = CORES_CAT[i % CORES_CAT.length];
         tab.style.setProperty('--tab-c', 'var(--' + cor + ')');
-        tab.addEventListener('click', function() { showCat(secId, tab); });
+        tab.addEventListener('click', function() {
+          showCat(secId, tab);
+          if (window.track) track('filter_category', { categoria: c.nome });
+        });
         if (tabs) tabs.appendChild(tab);
 
         var sec = el('div', {className:'cat-section' + (i === 0 ? ' active' : ''), id:secId, role:'tabpanel'});
@@ -937,6 +941,7 @@ function toggleFaq(btn) {
             var btn = e.target.closest('.subcat-btn');
             if (!btn) return;
             var sub = btn.getAttribute('data-sub');
+            if (window.track) track('filter_category', { categoria: catName, subcategoria: sub || 'Todos' });
             filterBar.querySelectorAll('.subcat-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
             grid.querySelectorAll('.product-card').forEach(function(card) {
               var subsCard = (card.getAttribute('data-sub') || '').split('|');
@@ -1166,6 +1171,7 @@ function addToWishlist(nome, preco, categoria) {
     return;
   }
   wishlist.push({ nome: nome, preco: preco || 'Sob consulta', categoria: categoria || '' });
+  if (window.track) track('add_to_quote', { produto: nome, categoria: categoria || '' });
   updateWishlistUI();
   // Feedback visual
   var floatBtn = document.getElementById('wl-float');
@@ -1259,5 +1265,9 @@ function enviarLista() {
   });
   msg += '\nPode me ajudar com valores, personalização e prazo?';
   var url = 'https://wa.me/5585997327204?text=' + encodeURIComponent(msg);
+  if (window.track) {
+    track('quote_sent', { qtd_itens: wishlist.length });
+    track('whatsapp_click', { origem: 'cesta' });
+  }
   window.open(url, '_blank');
 }
