@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Por enquanto só a página inicial. Na Fase 3 este arquivo passa a ser
+     gerado pelo script scripts/gerar-paginas.mjs, com as páginas de produto. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://studiomimimos.com.br/</loc>
+    <lastmod>2026-11-08</lastmod>
+  </url>
+</urlset>
