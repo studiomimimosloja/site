@@ -31,24 +31,148 @@
   <link rel="icon" type="image/png" href="assets/img/img-1.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 
-  <!-- Dados estruturados — Negócio local -->
+  <!-- Dados estruturados — Negócio local + site.
+       Faltam (pedir ao Math antes de incluir, nunca inventar): openingHoursSpecification e priceRange. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "Studio MiMimos",
-    "description": "Lembrancinhas de aniversário, mimos e presentes personalizados em Fortaleza, CE.",
-    "url": "https://studiomimimos.com.br/",
-    "telephone": "+55-85-99732-7204",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Fortaleza",
-      "addressRegion": "CE",
-      "addressCountry": "BR"
-    },
-    "sameAs": ["https://instagram.com/studiomimimos"]
+    "@graph": [
+      {
+        "@type": "LocalBusiness",
+        "@id": "https://studiomimimos.com.br/#negocio",
+        "name": "Studio MiMimos",
+        "description": "Lembrancinhas de aniversário, mimos e presentes personalizados em Fortaleza, CE.",
+        "url": "https://studiomimimos.com.br/",
+        "logo": "https://studiomimimos.com.br/assets/img/img-0.png",
+        "image": "https://studiomimimos.com.br/assets/img/og-image.jpg",
+        "telephone": "+55-85-99732-7204",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Fortaleza",
+          "addressRegion": "CE",
+          "addressCountry": "BR"
+        },
+        "areaServed": { "@type": "City", "name": "Fortaleza" },
+        "sameAs": ["https://instagram.com/studiomimimos"]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://studiomimimos.com.br/#site",
+        "name": "Studio MiMimos",
+        "url": "https://studiomimimos.com.br/",
+        "inLanguage": "pt-BR",
+        "publisher": { "@id": "https://studiomimimos.com.br/#negocio" }
+      }
+    ]
   }
   </script>
+
+  <!-- FAQ-JSONLD:INICIO (gerado por scripts/gerar-paginas.mjs a partir do FAQ desta página) -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Qual o prazo de produção?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "O prazo médio é de 3 a 7 dias úteis após a confirmação do pedido e pagamento. Para datas especiais, recomendamos encomendar com pelo menos 2 semanas de antecedência para garantir disponibilidade."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Vocês fazem entrega?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim! Fazemos entregas em Fortaleza e região. O valor do frete é combinado de acordo com o endereço e a quantidade de produtos. Também é possível retirar pessoalmente — é só combinar pelo WhatsApp."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso personalizar com nome, foto ou tema?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Com certeza! Essa é a nossa especialidade. Personalizamos com nome, foto, idade, tema, cores, mensagem e muito mais. Basta compartilhar o que você imagina pelo WhatsApp e a gente cria juntos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Atendem encomendas para empresas?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim! Atendemos empresas com kits personalizados para eventos, datas comemorativas e brindes corporativos. Fazemos pedidos em quantidade com logo e identidade visual da sua empresa. Entre em contato para orçamento."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quais formas de pagamento são aceitas?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Aceitamos Pix, transferência bancária e cartão de crédito via link de pagamento. Para pedidos parcelados, consulte as condições pelo WhatsApp. Geralmente pedimos um sinal no início e o restante na entrega."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Vocês fazem qualquer tema?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim! Trabalhamos com qualquer tema que você imaginar — personagens, cores, estilos e até referências que você encontrou na internet. Mande sua ideia pelo WhatsApp e criamos juntos!"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso pedir apenas uma unidade?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Depende do produto! Itens como letreiros 3D, topos de bolo e mimos individuais podem ser feitos em unidade única. Já lembrancinhas e caixinhas podem ter quantidade mínima. Consulte pelo WhatsApp informando o produto e quantidade desejada."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso aprovar a arte antes da produção?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Com certeza! Sempre que possível, enviamos a prévia da arte ou uma foto do protótipo para sua aprovação antes de finalizar a produção. Assim você tem certeza de que ficou do jeito que imaginou."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Tem desconto para quantidade?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim! Pedidos em maior quantidade podem ter condições especiais. Informe o produto e a quantidade pelo WhatsApp e faremos o melhor orçamento para você."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso pedir algo parecido com uma referência da internet?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claro! Adoramos quando os clientes mandam referências — fotos do Pinterest, Instagram ou de qualquer lugar. Usamos como inspiração para criar algo único e personalizado para você."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Os produtos são feitos sob encomenda?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim! Todos os nossos produtos são feitos sob encomenda, o que significa que cada peça é produzida especialmente para o seu pedido. Por isso, o prazo de produção pode variar conforme o tipo de produto, quantidade e nível de personalização."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Com quanto tempo de antecedência devo pedir?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Quanto antes, melhor! Para garantir seu pedido sem estresse, recomendamos pelo menos 1 a 2 semanas de antecedência. Em épocas de alta demanda (Dia das Mães, Natal, Páscoa), antecipe ainda mais. Pedidos urgentes podem ser avaliados!"
+      }
+    }
+  ]
+}
+  </script>
+  <!-- FAQ-JSONLD:FIM -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
