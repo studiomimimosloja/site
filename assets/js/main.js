@@ -332,7 +332,7 @@ function toggleFaq(btn) {
       }
 
       if (photos.length === 1) {
-        var single = el('img', {src: photos[0], alt: altText || '', loading:'lazy'});
+        var single = el('img', {src: photos[0], alt: altText || '', loading:'lazy', decoding:'async', width:'1200', height:'1200'});
         single.addEventListener('click', function(){ lightboxOpen(photos, 0, altText); });
         imgDiv.appendChild(single);
         return { imgDiv: imgDiv, goTo: null };
@@ -346,7 +346,7 @@ function toggleFaq(btn) {
 
       photos.forEach(function(src, si) {
         var slide = el('div', {className:'var-slide' + (si === 0 ? ' active' : '')});
-        var slideImg = el('img', {src: src, alt: (altText || '') + ' — foto ' + (si+1), loading:'lazy'});
+        var slideImg = el('img', {src: src, alt: (altText || '') + ' — foto ' + (si+1), loading:'lazy', decoding:'async', width:'1200', height:'1200'});
         slideImg.addEventListener('click', function(){ lightboxOpen(photos, currentIdx, altText); });
         slide.appendChild(slideImg);
         track.appendChild(slide);
@@ -455,7 +455,7 @@ function toggleFaq(btn) {
       variants.forEach(function(v, vi) {
         var slide = el('div', {className:'var-slide' + (vi === 0 ? ' active' : '')});
         if (v.foto_url) {
-          var vImg = el('img', {src: v.foto_url, alt: v.nome || '', loading:'lazy'});
+          var vImg = el('img', {src: v.foto_url, alt: v.nome || '', loading:'lazy', decoding:'async', width:'1200', height:'1200'});
           vImg.addEventListener('click', function(){
             var idx = _varFotos.indexOf(v.foto_url);
             lightboxOpen(_varFotos, idx < 0 ? 0 : idx, v.nome || '');
@@ -991,6 +991,7 @@ function toggleFaq(btn) {
         if (i < 2) { img.src = item.foto; } else { img.setAttribute('data-src', item.foto); }
         if (i === 0) { img.setAttribute('fetchpriority', 'high'); } else { img.loading = 'lazy'; }
         img.decoding = 'async';
+        img.width = 1200; img.height = 1200;
         img.alt = item.nome;
         slide.appendChild(img);
         if (item.nome) {
