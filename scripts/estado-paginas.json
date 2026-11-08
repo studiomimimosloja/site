@@ -1,0 +1,333 @@
+{
+  "tigela-gingerbread": {
+    "nome": "Tigela - Gingerbread",
+    "ids": [
+      66
+    ],
+    "hash": "7b02efd0ec46",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/prod_1793716041371_2h5q.webp"
+  },
+  "porta-retrato-arvore-de-natal": {
+    "nome": "Porta Retrato - Arvore de Natal",
+    "ids": [
+      65
+    ],
+    "hash": "52751081cb82",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/prod_1793360958162_5189.webp"
+  },
+  "letreiro-feliz-natal": {
+    "nome": "Letreiro - Feliz Natal",
+    "ids": [
+      64
+    ],
+    "hash": "5bc8d21351dd",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/prod_1793359460599_hh69.webp"
+  },
+  "castical-vila-de-inverno": {
+    "nome": "Castiçal - Vila de Inverno",
+    "ids": [
+      63
+    ],
+    "hash": "7d6377065f8c",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/prod_1792882284405_1vbu.webp"
+  },
+  "globo-de-neve-cidade-natalina": {
+    "nome": "Globo de Neve - Cidade Natalina",
+    "ids": [
+      62
+    ],
+    "hash": "14c3d7d4509d",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/prod_1792869822793_m9d4.webp"
+  },
+  "caixinha-chamine-do-papai-noel": {
+    "nome": "Caixinha - Chaminé do Papai Noel",
+    "ids": [
+      61
+    ],
+    "hash": "8162476b6f14",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/prod_1792861583559_t40y.webp"
+  },
+  "decoracao-natalina-com-nome": {
+    "nome": "Decoração Natalina - com Nome",
+    "ids": [
+      60
+    ],
+    "hash": "1cccb3cd1bd3",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/prod_1792589330813_q3lm.webp"
+  },
+  "arco-decorativo-presepio-iluminado": {
+    "nome": "Arco decorativo - Presépio iluminado",
+    "ids": [
+      59
+    ],
+    "hash": "cc1c0508d875",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588595281_3ke7.webp"
+  },
+  "porta-vela-vila-de-natal": {
+    "nome": "Porta Vela - Vila de Natal",
+    "ids": [
+      58
+    ],
+    "hash": "42d118e894a6",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588595942_6oei.webp"
+  },
+  "tigela-papai-noel": {
+    "nome": "Tigela - Papai Noel",
+    "ids": [
+      57
+    ],
+    "hash": "de5f66db885f",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588596570_jzn3.webp"
+  },
+  "porta-retrato-hohoho": {
+    "nome": "Porta Retrato - HoHoho",
+    "ids": [
+      56
+    ],
+    "hash": "932ab461cb77",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588597133_i4kc.webp"
+  },
+  "ornamento-de-boneco-de-neve-com-foto": {
+    "nome": "Ornamento de Boneco de Neve - com Foto",
+    "ids": [
+      55
+    ],
+    "hash": "cbae49a206ec",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588597746_3izc.webp"
+  },
+  "ornamento-de-cervo-com-foto": {
+    "nome": "Ornamento de Cervo - com Foto",
+    "ids": [
+      54
+    ],
+    "hash": "7f32fe449228",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588598341_ujm8.webp"
+  },
+  "canecas-natalinas": {
+    "nome": "Canecas Natalinas",
+    "ids": [
+      53
+    ],
+    "hash": "127ad0ff3b21",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588599171_dp4v.webp"
+  },
+  "porta-retrato-de-gravidez": {
+    "nome": "Porta Retrato de Gravidez",
+    "ids": [
+      52
+    ],
+    "hash": "99c0636dd1ca",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588600029_rwel.webp"
+  },
+  "porta-retrato-love": {
+    "nome": "Porta Retrato - Love",
+    "ids": [
+      51
+    ],
+    "hash": "b7a4bd3b95c7",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588600684_wvao.webp"
+  },
+  "placa-de-nascimento": {
+    "nome": "Placa de Nascimento",
+    "ids": [
+      50
+    ],
+    "hash": "757b286b676d",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588601369_vios.webp"
+  },
+  "caixa-triangulove": {
+    "nome": "Caixa Triangulove",
+    "ids": [
+      47,
+      48,
+      49
+    ],
+    "hash": "5a381235ca27",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588601911_z8wr.webp"
+  },
+  "caixa-roda-gigante": {
+    "nome": "Caixa Roda Gigante",
+    "ids": [
+      46
+    ],
+    "hash": "ff925a2fbfa5",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588602570_oek0.webp"
+  },
+  "sacolinha": {
+    "nome": "Sacolinha",
+    "ids": [
+      44,
+      45
+    ],
+    "hash": "abc0b4a269e6",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588603156_ea39.webp"
+  },
+  "caixa-piramide": {
+    "nome": "Caixa Piramide",
+    "ids": [
+      41,
+      5,
+      31
+    ],
+    "hash": "82ee25ccc98d",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588604148_l3yq.webp"
+  },
+  "canecas-personalizadas": {
+    "nome": "Canecas Personalizadas",
+    "ids": [
+      38
+    ],
+    "hash": "aeba0bacbbca",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588604688_287u.webp"
+  },
+  "porta-terco-sagrada-familia": {
+    "nome": "Porta Terço - Sagrada Familia",
+    "ids": [
+      37
+    ],
+    "hash": "585899cf9226",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588605164_vx3s.webp"
+  },
+  "centro-de-mesa": {
+    "nome": "Centro de Mesa",
+    "ids": [
+      33,
+      17,
+      39
+    ],
+    "hash": "3a93b89491fa",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588605705_2roy.webp"
+  },
+  "caixa-oitavada": {
+    "nome": "Caixa Oitavada",
+    "ids": [
+      18,
+      28,
+      26
+    ],
+    "hash": "f9a7654e17e0",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588606671_z69f.webp"
+  },
+  "cofrinho": {
+    "nome": "Cofrinho",
+    "ids": [
+      15,
+      7
+    ],
+    "hash": "c859e1c06748",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588607929_30rv.webp"
+  },
+  "baldinho-1-5-litros": {
+    "nome": "Baldinho 1.5 Litros",
+    "ids": [
+      14
+    ],
+    "hash": "4bb560b89fbc",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588608497_o32e.webp"
+  },
+  "display-de-mesa": {
+    "nome": "Display de Mesa",
+    "ids": [
+      13
+    ],
+    "hash": "8e5f37f579a6",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588609018_gmvg.webp"
+  },
+  "caixa-acrilica-5x5": {
+    "nome": "Caixa acrílica 5x5",
+    "ids": [
+      35
+    ],
+    "hash": "afa3b1ac6ccb",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588610851_uqgh.webp"
+  },
+  "caixa-sushi": {
+    "nome": "Caixa Sushi",
+    "ids": [
+      4,
+      29,
+      30
+    ],
+    "hash": "916a8c686a96",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588613085_b6yr.webp"
+  },
+  "caixa-milk": {
+    "nome": "Caixa Milk",
+    "ids": [
+      3,
+      22,
+      27
+    ],
+    "hash": "5245672a6512",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588613767_i4bm.webp"
+  },
+  "tubete-acrilico-13cm": {
+    "nome": "Tubete acrílico - 13cm",
+    "ids": [
+      40
+    ],
+    "hash": "ac35bfe9b964",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588615045_7o8x.webp"
+  },
+  "caixa-bala": {
+    "nome": "Caixa Bala",
+    "ids": [
+      6,
+      42,
+      43
+    ],
+    "hash": "ed3f8f192c70",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588625541_i5f7.webp"
+  },
+  "gaiolinha": {
+    "nome": "Gaiolinha",
+    "ids": [
+      8
+    ],
+    "hash": "e1aebcd00bdf",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588630199_57dx.webp"
+  },
+  "caixa-casinha": {
+    "nome": "Caixa Casinha",
+    "ids": [
+      9
+    ],
+    "hash": "abd2473113a2",
+    "lastmod": "2026-11-08",
+    "ogFonte": "https://grmulciyoytzqlrdqmcg.supabase.co/storage/v1/object/public/produtos/otm_1792588630699_44ag.webp"
+  }
+}

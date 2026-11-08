@@ -103,6 +103,7 @@ function toggleFaq(btn) {
     var CAT_SUBS = {};  // nome da categoria -> [subcategorias na ordem do admin]
     var BADGE_CLS = {}; // será preenchido dinamicamente
     var BADGE_STYLES = {}; // { nome: { cor_texto, cor_fundo } }
+    var PAGINAS = {};      // id do produto -> endereço da página dele (produto/paginas.json)
 
     // Fallback para badges antigos caso a tabela não exista ainda
     var BADGE_FALLBACK = {
@@ -196,6 +197,24 @@ function toggleFaq(btn) {
       desc._verMais.textContent = 'Ver mais';
       desc._verMais.setAttribute('aria-expanded', 'false');
       requestAnimationFrame(function() { checarDesc(desc); });
+    }
+
+    // Endereço da página do produto (só existe depois de rodar scripts/gerar-paginas.mjs)
+    function linkProduto(id) {
+      var slug = PAGINAS[String(id)];
+      return slug ? 'produto/' + slug + '/' : null;
+    }
+    // Nome do produto: vira link quando a página existe. Devolve onde trocar o texto.
+    function nomeProduto(h3, id, nome) {
+      var href = linkProduto(id);
+      if (!href) { h3.textContent = nome; return h3; }
+      var a = el('a', {href: href, className: 'product-link', textContent: nome});
+      h3.appendChild(a);
+      return a;
+    }
+    function linkDetalhes(id) {
+      var href = linkProduto(id);
+      return href ? el('a', {href: href, className: 'product-detalhes', textContent: 'Ver detalhes do produto ›'}) : null;
     }
 
     function createWppSvg() {
@@ -420,10 +439,14 @@ function toggleFaq(btn) {
 
       var body = el('div', {className:'product-body'});
       body.appendChild(el('div', {className:'product-cat', textContent: catName}));
-      body.appendChild(el('h3', {className:'product-name', textContent: p.nome || ''}));
+      var h3s = el('h3', {className:'product-name'});
+      nomeProduto(h3s, p.id, p.nome || '');
+      body.appendChild(h3s);
       var descSimples = novaDesc(p.descricao);
       body.appendChild(descSimples);
       addVerMais(descSimples);
+      var detS = linkDetalhes(p.id);
+      if (detS) body.appendChild(detS);
 
       var foot = el('div', {className:'product-foot'});
       foot.appendChild(buildPrice(p));
@@ -505,8 +528,9 @@ function toggleFaq(btn) {
 
       // Nome (usa nome base do grupo, tirando o nome da variação)
       var baseName = variants[0].nome || '';
-      var nameEl = el('h3', {className:'product-name', textContent: baseName});
-      body.appendChild(nameEl);
+      var h3g = el('h3', {className:'product-name'});
+      var nameEl = nomeProduto(h3g, variants[0].id, baseName);
+      body.appendChild(h3g);
 
       // ─ Seletor de variações ─
       if (variants.length > 1) {
@@ -524,6 +548,8 @@ function toggleFaq(btn) {
       var descEl = novaDesc(variants[0].descricao);
       body.appendChild(descEl);
       addVerMais(descEl);
+      var detG = linkDetalhes(variants[0].id);
+      if (detG) body.appendChild(detG);
 
       // Footer (preço + botão WPP)
       var foot = el('div', {className:'product-foot'});
@@ -668,7 +694,11 @@ function toggleFaq(btn) {
         headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Cache-Control": "no-cache" }
       }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
 
-      Promise.all([badgesReq, produtosReq, depsReq, catsReq]).then(function(results) {
+      var paginasReq = fetch('produto/paginas.json', { cache: 'no-cache' })
+        .then(function(r) { return r.ok ? r.json() : {}; }).catch(function() { return {}; });
+
+      Promise.all([badgesReq, produtosReq, depsReq, catsReq, paginasReq]).then(function(results) {
+        PAGINAS = (results[4] && typeof results[4] === 'object') ? results[4] : {};
         var badgesData = Array.isArray(results[0]) ? results[0] : [];
         var produtosData = Array.isArray(results[1]) ? results[1] : [];
         var depsData = Array.isArray(results[2]) ? results[2] : [];
@@ -692,6 +722,7 @@ function toggleFaq(btn) {
         renderCatalog(ordenarProdutos(produtosData, window._ordemCatalogo || 'tradicional'));
         renderHeroCarousel(produtosData);
         renderNatal(produtosData);
+        abrirCategoriaDaUrl();
 
         // Renderizar destaques
         // LEMBRETE: desativado a pedido do Math (catálogo pequeno). Para reativar,
@@ -701,6 +732,22 @@ function toggleFaq(btn) {
         // Renderizar depoimentos
         renderDepoimentos(depsData);
       });
+    }
+
+    // Link vindo de uma página de produto (/#categoria-lembrancinhas): abre a aba certa
+    function slugify(t) {
+      return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    function abrirCategoriaDaUrl() {
+      var m = location.hash.match(/^#categoria-(.+)$/);
+      if (!m) return;
+      var nome = Object.keys(CAT_IDS).filter(function(n) { return slugify(n) === m[1]; })[0];
+      if (!nome) return;
+      var tab = document.querySelector('[aria-controls="' + CAT_IDS[nome] + '"]');
+      if (tab) showCat(CAT_IDS[nome], tab);
+      var cat = document.getElementById('catalogo');
+      if (cat) cat.scrollIntoView();
     }
 
     // Extrai um número de preço para ordenação. Sob consulta / sem preço => null
@@ -1161,113 +1208,3 @@ function toggleFaq(btn) {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCatalog);
     else initCatalog();
   })();
-// ══ LISTA DE DESEJOS (Wishlist) ══════════════════
-var wishlist = [];
-
-function addToWishlist(nome, preco, categoria) {
-  var exists = wishlist.some(function(item) { return item.nome === nome; });
-  if (exists) {
-    removeFromWishlist(nome);
-    return;
-  }
-  wishlist.push({ nome: nome, preco: preco || 'Sob consulta', categoria: categoria || '' });
-  if (window.track) track('add_to_quote', { produto: nome, categoria: categoria || '' });
-  updateWishlistUI();
-  // Feedback visual
-  var floatBtn = document.getElementById('wl-float');
-  if (floatBtn) { floatBtn.classList.add('wl-pulse'); setTimeout(function() { floatBtn.classList.remove('wl-pulse'); }, 400); }
-}
-
-function removeFromWishlist(nome) {
-  wishlist = wishlist.filter(function(item) { return item.nome !== nome; });
-  updateWishlistUI();
-}
-
-function isInWishlist(nome) {
-  return wishlist.some(function(item) { return item.nome === nome; });
-}
-
-function updateWishlistUI() {
-  var count = wishlist.length;
-  var floatBtn = document.getElementById('wl-float');
-  var countEl = document.getElementById('wl-count');
-  var itemsEl = document.getElementById('wl-items');
-  var footerEl = document.getElementById('wl-footer');
-
-  // Botão flutuante sempre visível; só a bolinha de contagem aparece com itens
-  if (floatBtn) floatBtn.style.display = 'flex';
-  if (countEl) {
-    countEl.textContent = count;
-    countEl.style.display = count > 0 ? 'inline-flex' : 'none';
-  }
-
-  // Atualizar botões nos cards
-  document.querySelectorAll('.wl-add-btn').forEach(function(btn) {
-    var nome = btn.getAttribute('data-wl-nome');
-    if (isInWishlist(nome)) {
-      btn.classList.add('wl-added');
-      btn.textContent = '✓ Adicionado';
-    } else {
-      btn.classList.remove('wl-added');
-      btn.textContent = '+ Adicionar';
-    }
-  });
-
-  // Painel
-  if (!itemsEl) return;
-  itemsEl.innerHTML = '';
-  if (count === 0) {
-    itemsEl.innerHTML = '<p class="wl-empty">Nenhum produto adicionado ainda.<br>Navegue pelo catálogo e clique em "Adicionar" nos produtos que deseja.</p>';
-    if (footerEl) footerEl.style.display = 'none';
-    return;
-  }
-  if (footerEl) footerEl.style.display = 'block';
-
-  wishlist.forEach(function(item) {
-    var div = document.createElement('div');
-    div.className = 'wl-item';
-    var info = document.createElement('div');
-    info.className = 'wl-item-info';
-    var nameEl = document.createElement('div');
-    nameEl.className = 'wl-item-name';
-    nameEl.textContent = item.nome;
-    info.appendChild(nameEl);
-    var priceEl = document.createElement('div');
-    priceEl.className = 'wl-item-price';
-    priceEl.textContent = item.preco;
-    info.appendChild(priceEl);
-    div.appendChild(info);
-    var removeBtn = document.createElement('button');
-    removeBtn.className = 'wl-item-remove';
-    removeBtn.textContent = '✕';
-    removeBtn.setAttribute('aria-label', 'Remover ' + item.nome);
-    removeBtn.onclick = function() { removeFromWishlist(item.nome); };
-    div.appendChild(removeBtn);
-    itemsEl.appendChild(div);
-  });
-}
-
-function toggleWishlist() {
-  var panel = document.getElementById('wishlist-panel');
-  if (!panel) return;
-  var isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'flex';
-  document.body.style.overflow = isOpen ? '' : 'hidden';
-}
-
-function enviarLista() {
-  if (!wishlist.length) return;
-  var msg = 'Olá, Studio MiMimos!\n\nVim pelo site e gostaria de combinar o pedido desses produtos:\n\n';
-  wishlist.forEach(function(item, i) {
-    msg += '• *' + item.nome + '*';
-    if (item.preco && item.preco !== 'Sob consulta') msg += ' — ' + item.preco;
-    msg += '\n';
-  });
-  msg += '\nPode me ajudar com valores, personalização e prazo?';
-  var url = 'https://wa.me/5585997327204?text=' + encodeURIComponent(msg);
-  if (window.track) {
-    track('quote_sent', { qtd_itens: wishlist.length });
-    track('whatsapp_click', { origem: 'cesta' });
-  }
-  window.open(url, '_blank');
-}

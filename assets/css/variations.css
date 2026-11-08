@@ -1112,3 +1112,12 @@
 .np-btn:hover{background:#a43f4e; transform:translateY(-2px)}
 .np-depois{display:block; margin:14px auto 0; border:0; background:none; cursor:pointer; color:#8a849b; font:inherit; font-size:.85rem; text-decoration:underline}
 @media (prefers-reduced-motion:reduce){ .np-noel{animation:none} .np-card,.np-overlay{transition:none} }
+
+/* ── Link para a página do produto (nome + "Ver detalhes") ── */
+.product-name .product-link{ color:inherit; text-decoration:none; }
+.product-name .product-link:hover{ color:var(--accent-d, var(--teal-d)); text-decoration:underline; text-underline-offset:3px; }
+.product-detalhes{
+  display:inline-block; margin-top:8px; font-size:.8rem; font-weight:700;
+  color:var(--accent-d, var(--teal-d)); text-decoration:none;
+}
+.product-detalhes:hover{ text-decoration:underline; text-underline-offset:3px; }
