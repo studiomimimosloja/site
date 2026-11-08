@@ -7,7 +7,7 @@
 //   GA fora do ar ou ID ainda não configurado).
 // - Para testar no DebugView do GA4: abra o site com ?debug_ga=1
 (function() {
-  var GA_ID = 'G-XXXXXXXXXX'; // ← COLE_AQUI_O_ID_DO_GA4 (Admin › Fluxos de dados › Web)
+  var GA_ID = 'G-DH5GHDYTG7'; // ID do GA4 (Admin › Fluxos de dados › Web)
   var CHAVE = 'mimimos-cookies'; // localStorage: 'aceito' | 'recusado'
   var configurado = /^G-[A-Z0-9]{6,}$/.test(GA_ID) && GA_ID !== 'G-XXXXXXXXXX';
   var debug = /[?&]debug_ga=1/.test(location.search);
