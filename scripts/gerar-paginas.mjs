@@ -22,6 +22,8 @@ const SITE = 'https://studiomimimos.com.br';
 const WPP = '5585997327204';
 const HOJE = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }); // AAAA-MM-DD
 const VERSAO = HOJE.replace(/-/g, '');
+// Mesma política de segurança (CSP) das outras páginas públicas (index.html e 404.html)
+const CSP = "default-src 'self'; script-src 'self' https://*.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://grmulciyoytzqlrdqmcg.supabase.co https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://grmulciyoytzqlrdqmcg.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests";
 
 // Mesma URL e chave pública que o site usa (lidas do main.js, ou da variável de ambiente)
 const mainJs = readFileSync(join(RAIZ, 'assets/js/main.js'), 'utf8');
@@ -243,6 +245,8 @@ function paginaHtml(g, relacionados, badges) {
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="${CSP}">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Página gerada por scripts/gerar-paginas.mjs — não edite à mão: edite o produto no painel e rode o script de novo. -->
   <title>${esc(titulo)}</title>

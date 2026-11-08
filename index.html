@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <!-- Segurança: lista de origens permitidas (CSP). Ao usar um serviço novo, inclua a origem aqui. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://*.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://grmulciyoytzqlrdqmcg.supabase.co https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://grmulciyoytzqlrdqmcg.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Studio MiMimos | Lembrancinhas e Presentes Personalizados em Fortaleza</title>
   <meta name="description" content="Lembrancinhas de aniversário, mimos e presentes personalizados em Fortaleza, CE. Impressão 3D, cestas, kits e muito mais. Encomendas pelo WhatsApp!">
@@ -372,13 +375,13 @@ body > *{ position:relative; z-index:1; }
 
 <!-- menu mobile -->
 <nav class="mobile-nav" id="mobile-nav" aria-label="Menu mobile">
-  <a href="#sobre" onclick="closeMobileNav()">Sobre</a>
-  <a href="#como-funciona" onclick="closeMobileNav()">Como funciona</a>
-  <a href="#catalogo" onclick="closeMobileNav()">Catálogo</a>
-  <a href="#depoimentos" onclick="closeMobileNav()">Depoimentos</a>
-  <a href="#faq" onclick="closeMobileNav()">FAQ</a>
-  <a href="https://instagram.com/studiomimimos" target="_blank" rel="noopener noreferrer" onclick="closeMobileNav()">Instagram</a>
-  <a href="https://wa.me/5585997327204?text=Ol%C3%A1%21%20Vi%20o%20site%20do%20Studio%20MiMimos%20e%20gostaria%20de%20fazer%20um%20or%C3%A7amento.%20%F0%9F%98%8A" class="mobile-wpp" target="_blank" rel="noopener noreferrer" onclick="closeMobileNav()">
+  <a href="#sobre">Sobre</a>
+  <a href="#como-funciona">Como funciona</a>
+  <a href="#catalogo">Catálogo</a>
+  <a href="#depoimentos">Depoimentos</a>
+  <a href="#faq">FAQ</a>
+  <a href="https://instagram.com/studiomimimos" target="_blank" rel="noopener noreferrer">Instagram</a>
+  <a href="https://wa.me/5585997327204?text=Ol%C3%A1%21%20Vi%20o%20site%20do%20Studio%20MiMimos%20e%20gostaria%20de%20fazer%20um%20or%C3%A7amento.%20%F0%9F%98%8A" class="mobile-wpp" target="_blank" rel="noopener noreferrer">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Chamar no WhatsApp
   </a>
 </nav>
@@ -606,7 +609,7 @@ body > *{ position:relative; z-index:1; }
 
     <div class="cat-ordenar">
       <label for="ordenar-sel">Ordenar por:</label>
-      <select id="ordenar-sel" onchange="mudarOrdem(this.value)">
+      <select id="ordenar-sel">
         <option value="tradicional">Padrão da loja</option>
         <option value="preco-asc">Menor preço</option>
         <option value="preco-desc">Maior preço</option>
@@ -719,35 +722,35 @@ body > *{ position:relative; z-index:1; }
       </div>
       <div class="faq-list reveal" style="transition-delay:.1s">
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Qual o prazo de produção?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">O prazo médio é de 3 a 7 dias úteis após a confirmação do pedido e pagamento. Para datas especiais, recomendamos encomendar com pelo menos 2 semanas de antecedência para garantir disponibilidade.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Vocês fazem entrega?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Sim! Fazemos entregas em Fortaleza e região. O valor do frete é combinado de acordo com o endereço e a quantidade de produtos. Também é possível retirar pessoalmente — é só combinar pelo WhatsApp.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Posso personalizar com nome, foto ou tema?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Com certeza! Essa é a nossa especialidade. Personalizamos com nome, foto, idade, tema, cores, mensagem e muito mais. Basta compartilhar o que você imagina pelo WhatsApp e a gente cria juntos.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Atendem encomendas para empresas?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Sim! Atendemos empresas com kits personalizados para eventos, datas comemorativas e brindes corporativos. Fazemos pedidos em quantidade com logo e identidade visual da sua empresa. Entre em contato para orçamento.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Quais formas de pagamento são aceitas?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
@@ -755,49 +758,49 @@ body > *{ position:relative; z-index:1; }
         </div>
 
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Vocês fazem qualquer tema?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Sim! Trabalhamos com qualquer tema que você imaginar — personagens, cores, estilos e até referências que você encontrou na internet. Mande sua ideia pelo WhatsApp e criamos juntos!</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Posso pedir apenas uma unidade?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Depende do produto! Itens como letreiros 3D, topos de bolo e mimos individuais podem ser feitos em unidade única. Já lembrancinhas e caixinhas podem ter quantidade mínima. Consulte pelo WhatsApp informando o produto e quantidade desejada.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Posso aprovar a arte antes da produção?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Com certeza! Sempre que possível, enviamos a prévia da arte ou uma foto do protótipo para sua aprovação antes de finalizar a produção. Assim você tem certeza de que ficou do jeito que imaginou.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Tem desconto para quantidade?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Sim! Pedidos em maior quantidade podem ter condições especiais. Informe o produto e a quantidade pelo WhatsApp e faremos o melhor orçamento para você.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Posso pedir algo parecido com uma referência da internet?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Claro! Adoramos quando os clientes mandam referências — fotos do Pinterest, Instagram ou de qualquer lugar. Usamos como inspiração para criar algo único e personalizado para você.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Os produtos são feitos sob encomenda?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
           <div class="faq-a" role="region"><div class="faq-a-inner">Sim! Todos os nossos produtos são feitos sob encomenda, o que significa que cada peça é produzida especialmente para o seu pedido. Por isso, o prazo de produção pode variar conforme o tipo de produto, quantidade e nível de personalização.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          <button class="faq-q" aria-expanded="false">
             Com quanto tempo de antecedência devo pedir?
             <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-linecap="round"/></svg></span>
           </button>
@@ -943,7 +946,7 @@ body > *{ position:relative; z-index:1; }
     </div>
   </div>
   <div class="footer-bottom">
-    <p class="footer-copy">© <script>document.write(new Date().getFullYear())</script> Studio MiMimos. Todos os direitos reservados. · <button type="button" class="ck-link" data-cookies-prefs>Preferências de cookies</button></p>
+    <p class="footer-copy">© <span id="ano-atual">2026</span> Studio MiMimos. Todos os direitos reservados. · <button type="button" class="ck-link" data-cookies-prefs>Preferências de cookies</button></p>
     <p class="footer-loc">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
       Fortaleza, CE

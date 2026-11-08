@@ -15,6 +15,11 @@ function closeMobileNav() {
   mobileNav.classList.remove('open');
   menuToggle.setAttribute('aria-expanded','false');
 }
+mobileNav.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', closeMobileNav); });
+
+// Ano no rodapé
+var anoAtual = document.getElementById('ano-atual');
+if (anoAtual) anoAtual.textContent = new Date().getFullYear();
 
 menuToggle.addEventListener('click', function() {
   menuOpen = !menuOpen;
@@ -83,6 +88,10 @@ function toggleFaq(btn) {
     answer.style.maxHeight = answer.scrollHeight + 'px';
   }
 }
+
+document.querySelectorAll('.faq-q').forEach(function(btn) {
+  btn.addEventListener('click', function() { toggleFaq(btn); });
+});
 
 // ── Hero carousel removido (hero redesenhado) ──;
   // == SUPABASE CATALOGO LOADER (com variações) ==
@@ -803,6 +812,9 @@ function toggleFaq(btn) {
         if (tabBtn) showCat(ativa.id, tabBtn);
       }
     }
+
+    var ordenarSel = document.getElementById('ordenar-sel');
+    if (ordenarSel) ordenarSel.addEventListener('change', function() { mudarOrdem(ordenarSel.value); });
 
     // ── Ícone de traço fino por categoria (pelo nome; padrão = presente) ──
     var ICONES_CAT = {
