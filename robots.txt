@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Painel admin e ferramentas internas
+Disallow: /admin.html
+Disallow: /orcamento.html
+
+# Arquivos técnicos do repositório (não são páginas do site)
+Disallow: /*.sql$
+Disallow: /*.md$
+Disallow: /scripts/
+Disallow: /supabase/
+Disallow: /docs/
+
+Sitemap: https://studiomimimos.com.br/sitemap.xml
