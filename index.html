@@ -35,7 +35,7 @@
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 
   <!-- Dados estruturados — Negócio local + site.
-       Faltam (pedir ao Math antes de incluir, nunca inventar): openingHoursSpecification e priceRange. -->
+       Horário (24h, todos os dias) e preço mínimo (R$ 2,50) informados pelo Math em 08/11/2026. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -56,6 +56,14 @@
           "addressCountry": "BR"
         },
         "areaServed": { "@type": "City", "name": "Fortaleza" },
+        "priceRange": "A partir de R$ 2,50",
+        "currenciesAccepted": "BRL",
+        "openingHoursSpecification": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          "opens": "00:00",
+          "closes": "23:59"
+        },
         "sameAs": ["https://instagram.com/studiomimimos"]
       },
       {
