@@ -182,8 +182,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Nunito+Sans:wght@300;400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/variations.css?v=20261108">
+<link rel="stylesheet" href="assets/css/variations.css?v=20261109">
 <link rel="stylesheet" href="assets/css/cookies.css?v=20261108">
+<script src="assets/js/sazonal.js?v=20261108"></script>
 <style>
 /* ── Textura de fundo: padrão de pontinhos delicados (papelaria artesanal) ── */
 body{ background-color:var(--bg); }
@@ -428,8 +429,9 @@ body > *{ position:relative; z-index:1; }
 
 <!-- ══ VITRINE DE NATAL (temporária) ══════════════════
      Aparece sozinha de outubro a dezembro, só se houver produtos na categoria
-     "Natal" do painel admin. Para tirar do ar: desative a categoria Natal. -->
-<section id="natal" class="natal-vitrine" aria-labelledby="natal-title" style="display:none">
+     "Natal" do painel admin. Para tirar do ar: desative a categoria Natal.
+     O espaço já nasce reservado na temporada (assets/js/sazonal.js + CSS). -->
+<section id="natal" class="natal-vitrine" aria-labelledby="natal-title">
   <div class="natal-deco" aria-hidden="true">
     <div class="natal-luzes natal-luzes--a"></div>
     <div class="natal-luzes natal-luzes--b"></div>

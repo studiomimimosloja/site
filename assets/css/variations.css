@@ -1121,3 +1121,15 @@
   color:var(--accent-d, var(--teal-d)); text-decoration:none;
 }
 .product-detalhes:hover{ text-decoration:underline; text-underline-offset:3px; }
+
+/* ── Sem "pulos" ao carregar (CLS) ── */
+/* Vitrine de Natal: escondida fora da temporada; na temporada (classe posta pelo
+   sazonal.js no <head>) já aparece com espaço reservado antes dos produtos chegarem. */
+.natal-vitrine{ display:none; }
+html.natal-temporada .natal-vitrine{ display:block; }
+html.natal-temporada #natal-grid:empty{ min-height:480px; }
+/* "feitos pra você" numa linha só no computador: a fonte provisória (antes da
+   Caveat carregar) é mais larga e quebrava em duas linhas, mexendo no topo. */
+@media (min-width:901px){
+  .hero-v2 h1 em.hand-accent{ white-space:nowrap; }
+}
